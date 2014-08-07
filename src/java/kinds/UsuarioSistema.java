@@ -18,6 +18,7 @@ public class UsuarioSistema extends Usuario {
     private String email;
     private String password;
     private String name;
+    @Expose private int level;
     @Expose private String config;
     
     private void setConfig (JsonObject object) {
@@ -56,6 +57,12 @@ public class UsuarioSistema extends Usuario {
     public void setConfig(String config) {
         this.config = config;
     }
-    
-    
+
+    public int getLevel() {
+        return level;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
 }
