@@ -12,7 +12,7 @@ import com.google.gson.annotations.Expose;
  *
  * @author reddo
  */
-public class UsuarioSala extends Usuario {
+public class UsuarioChat extends Usuario {
     @Expose private Boolean storyteller;
     @Expose private String avatar;
     @Expose private String persona;

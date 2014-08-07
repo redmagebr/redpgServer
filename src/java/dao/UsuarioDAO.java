@@ -16,7 +16,7 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import kinds.Usuario;
-import kinds.UsuarioSala;
+import kinds.UsuarioChat;
 import kinds.UsuarioSistema;
 import sistema.ConnectionPooler;
 import sistema.Mailer;
@@ -36,7 +36,7 @@ public class UsuarioDAO {
      * Empty UsuarioSistema : Not Found <br />
      * null : Internal Error
      */
-    public static UsuarioSistema getUsuario (String email, String password) {
+    public static UsuarioSistema getUsuarioSistema (String email, String password) {
         Connection dbh = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -44,7 +44,7 @@ public class UsuarioDAO {
         try {
             dbh = ConnectionPooler.getConnection();
             
-            stmt = dbh.prepareStatement("SELECT level, email, id, nickname, nicknamesufix, name, password, config FROM usuario WHERE email = ? AND password = ?");
+            stmt = dbh.prepareStatement("SELECT level, email, id, nickname, nicknamesufix, name, config FROM usuario WHERE email = ? AND password = ?");
             stmt.setString(1, email);
             stmt.setString(2, password);
             rs = stmt.executeQuery();
@@ -54,10 +54,46 @@ public class UsuarioDAO {
                 user.setId(rs.getInt("id"));
                 user.setNickname(rs.getString("nickname"));
                 user.setNicknamesufix(rs.getString("nicknamesufix"));
-                user.setPassword(rs.getString("password"));
                 user.setLevel(rs.getInt("level"));
                 user.setName(rs.getString("name"));
                 user.setConfig(rs.getString("config"));
+            }
+            return user;
+        } catch (SQLException e) {
+            return null;
+        } finally {
+            ConnectionPooler.closeResultset(rs);
+            ConnectionPooler.closeStatement(stmt);
+            ConnectionPooler.closeConnection(dbh);
+        }
+    }
+    
+    /**
+     * Gets information on specific user through Nickname and Sufix.
+     * @param nick
+     * @param nicksufix
+     * @return 
+     * Usuario <br />
+     * Empty Usuario if not found <br />
+     * null if internal error
+     */
+    public static Usuario getUsuario (String nick, String nicksufix) {
+        Connection dbh = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        Usuario user = new Usuario();
+        try {
+            dbh = ConnectionPooler.getConnection();
+            
+            stmt = dbh.prepareStatement("SELECT level, email, id, nickname, nicknamesufix FROM usuario WHERE nickname = ? AND nicknamesufix = ?");
+            stmt.setString(1, nick);
+            stmt.setString(2, nicksufix);
+            rs = stmt.executeQuery();
+            if (rs.next()) {
+                user = new UsuarioSistema();
+                user.setId(rs.getInt("id"));
+                user.setNickname(rs.getString("nickname"));
+                user.setNicknamesufix(rs.getString("nicknamesufix"));
             }
             return user;
         } catch (SQLException e) {
@@ -305,11 +341,11 @@ public class UsuarioDAO {
      * ArrayList of all found users; <br />
      * null on internal error
      */
-    public static ArrayList<UsuarioSala> getRoomUsers (int roomid) {
+    public static ArrayList<UsuarioChat> getRoomUsers (int roomid) {
         Connection dbh = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        ArrayList<UsuarioSala> users = new ArrayList<UsuarioSala>();
+        ArrayList<UsuarioChat> users = new ArrayList<UsuarioChat>();
         try {
             dbh = ConnectionPooler.getConnection();
             stmt = dbh.prepareStatement("SELECT * FROM view_salausuario WHERE ID_Sala = ?;");
@@ -317,10 +353,10 @@ public class UsuarioDAO {
             
             rs = stmt.executeQuery();
             
-            UsuarioSala user;
+            UsuarioChat user;
             
             while (rs.next()) {
-                user = new UsuarioSala();
+                user = new UsuarioChat();
                 user.setId(rs.getInt("ID_Usuario"));
                 user.setNickname(rs.getString("Nick_Usuario"));
                 user.setNicknamesufix(rs.getString("Nicksufix_Usuario"));
@@ -345,7 +381,7 @@ public class UsuarioDAO {
      * @return UsuarioSala on success <br />
      * null on not found or internal error.
      */
-    public static UsuarioSala getRoomUser (int userid, int roomid) {
+    public static UsuarioChat getRoomUser (int userid, int roomid) {
         Connection dbh = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -358,7 +394,7 @@ public class UsuarioDAO {
             rs = stmt.executeQuery();
             
             if (rs.next()) {
-                UsuarioSala user = new UsuarioSala();
+                UsuarioChat user = new UsuarioChat();
                 user.setId(rs.getInt("ID_Usuario"));
                 user.setNickname(rs.getString("Nick_Usuario"));
                 user.setNicknamesufix(rs.getString("Nicksufix_Usuario"));

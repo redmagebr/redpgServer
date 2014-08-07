@@ -9,17 +9,26 @@ package kinds;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
+import java.io.Serializable;
 
 /**
  *
  * @author reddo
  */
-public class UsuarioSistema extends Usuario {
+public class UsuarioSistema extends Usuario implements Serializable {
     private String email;
     private String password;
     private String name;
     @Expose private int level;
     @Expose private String config;
+    
+    private void prepareJSON () {
+        Gson gson = new Gson();
+        
+        this.setEmail(gson.toJson(this.getEmail()));
+        this.setNickname(gson.toJson(this.getNickname()));
+        this.setNicknamesufix(gson.toJson(this.getNicknamesufix()));
+    }
     
     private void setConfig (JsonObject object) {
         Gson gson = new Gson();
