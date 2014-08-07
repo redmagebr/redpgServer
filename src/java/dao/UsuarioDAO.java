@@ -13,13 +13,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import kinds.Usuario;
 import kinds.UsuarioChat;
 import kinds.UsuarioSistema;
 import sistema.ConnectionPooler;
-import sistema.Mailer;
 
 /**
  *
