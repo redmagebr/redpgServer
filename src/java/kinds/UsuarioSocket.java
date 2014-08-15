@@ -16,7 +16,7 @@ import javax.websocket.Session;
  * @author reddo
  */
 public class UsuarioSocket extends UsuarioChat {
-    private Set<Session> sessions = Collections.synchronizedSet(new HashSet<Session>());
+    private final Set<Session> sessions = Collections.synchronizedSet(new HashSet<Session>());
     
     
     public void addSession (Session session) {

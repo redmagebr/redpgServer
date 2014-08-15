@@ -6,7 +6,6 @@
 
 package dao;
 
-import com.google.gson.Gson;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
