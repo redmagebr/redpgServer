@@ -21,7 +21,6 @@ public final class ConnectionPooler {
         dataSource.setUrl("jdbc:mysql://localhost:3306/redpg_chat?useUnicode=true&characterEncoding=utf-8");
         dataSource.setUsername("");
         dataSource.setPassword("");
-        
     }
     
     public static Connection getConnection () throws SQLException {
