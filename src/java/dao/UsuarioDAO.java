@@ -6,6 +6,7 @@
 
 package dao;
 
+import com.google.gson.Gson;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -82,7 +83,7 @@ public class UsuarioDAO {
         try {
             dbh = ConnectionPooler.getConnection();
             
-            stmt = dbh.prepareStatement("SELECT level, email, id, nickname, nicknamesufix FROM usuario WHERE nickname = ? AND nicknamesufix = ?");
+            stmt = dbh.prepareStatement("SELECT id, nickname, nicknamesufix FROM usuario WHERE nickname = ? AND nicknamesufix = ?");
             stmt.setString(1, nick);
             stmt.setString(2, nicksufix);
             rs = stmt.executeQuery();
@@ -404,6 +405,26 @@ public class UsuarioDAO {
             return null;
         } finally {
             ConnectionPooler.closeResultset(rs);
+            ConnectionPooler.closeStatement(stmt);
+            ConnectionPooler.closeConnection(dbh);
+        }
+    }
+    
+    public static int storeConfig (UsuarioSistema usuario) {
+        Connection dbh = null;
+        PreparedStatement stmt = null;
+        try {
+            dbh = ConnectionPooler.getConnection();
+            stmt = dbh.prepareStatement("UPDATE usuario SET config = ? WHERE id = ?;");
+            stmt.setString(1, usuario.getConfig());
+            stmt.setInt(2, usuario.getId());
+            if (stmt.executeUpdate() > 0) {
+                return 1;
+            }
+            return 0;
+        } catch (SQLException ex) {
+            return -1;
+        } finally {
             ConnectionPooler.closeStatement(stmt);
             ConnectionPooler.closeConnection(dbh);
         }

@@ -13,15 +13,15 @@ import com.google.gson.annotations.Expose;
  * @author reddo
  */
 public class Usuario {
-    @Expose private int id;
+    @Expose private Integer id = null;
     @Expose private String nickname;
     @Expose private String nicknamesufix;
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

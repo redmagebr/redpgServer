@@ -26,8 +26,12 @@ public final class ConnectionPooler {
     
     public static Connection getConnection () throws SQLException {
         if (cpl == null) {
-            cpl = new ConnectionPooler();
-            cpl.openSource();
+            synchronized (ConnectionPooler.class) {
+                if (cpl == null) {
+                    cpl = new ConnectionPooler();
+                    cpl.openSource();
+                }
+            }
         }
         return cpl.dataSource.getConnection();
     }
