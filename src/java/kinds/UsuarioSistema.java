@@ -9,13 +9,12 @@ package kinds;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
-import java.io.Serializable;
 
 /**
  *
  * @author reddo
  */
-public class UsuarioSistema extends Usuario implements Serializable {
+public class UsuarioSistema extends Usuario {
     private String email;
     private String password;
     private String name;

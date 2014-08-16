@@ -17,21 +17,31 @@ import javax.websocket.Session;
  */
 public class UsuarioSocket extends UsuarioChat {
     private final Set<Session> sessions = Collections.synchronizedSet(new HashSet<Session>());
-    
-    
-    public void addSession (Session session) {
-        this.sessions.add(session);
+    private boolean online;
+
+    public boolean isOnline() {
+        return online;
+    }
+
+    public void setOnline(boolean online) {
+        this.online = online;
     }
     
-    public void removeSession (Session session) {
+    public synchronized void addSession (Session session) {
+        this.sessions.add(session);
+        if (!this.online) {
+            this.online = true;
+        }
+    }
+    
+    public synchronized void removeSession (Session session) {
         this.sessions.remove(session);
+        if (this.sessions.size() < 1) {
+            this.online = false;
+        }
     }
     
     public Set<Session> getSessions () {
         return this.sessions;
-    }
-    
-    public int sessionsNumber () {
-        return this.sessions.size();
     }
 }
