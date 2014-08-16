@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package sistema;
 
 import com.google.gson.Gson;
@@ -15,8 +9,8 @@ import com.google.gson.GsonBuilder;
  */
 public class GsonFactory {
     private static GsonFactory factory;
-    private Gson gson = new Gson();
-    private Gson gsonExposed = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+    private final Gson gson = new Gson();
+    private final Gson gsonExposed = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
     
     public static GsonFactory getFactory () {
         if (factory == null) {
