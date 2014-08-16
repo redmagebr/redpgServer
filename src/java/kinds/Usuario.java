@@ -13,7 +13,7 @@ import com.google.gson.annotations.Expose;
  * @author reddo
  */
 public class Usuario {
-    @Expose private Integer id = null;
+    @Expose private Integer id;
     @Expose private String nickname;
     @Expose private String nicknamesufix;
 

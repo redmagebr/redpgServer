@@ -13,17 +13,17 @@ import com.google.gson.annotations.Expose;
  * @author reddo
  */
 public class UsuarioChat extends Usuario {
-    @Expose private Boolean storyteller;
+    @Expose private boolean storyteller;
     @Expose private String avatar;
     @Expose private String persona;
-    @Expose private Boolean typing;
-    @Expose private Boolean focused;
+    @Expose private boolean typing;
+    @Expose private boolean focused;
 
-    public Boolean isStoryteller() {
+    public boolean isStoryteller() {
         return storyteller;
     }
 
-    public void setStoryteller(Boolean storyteller) {
+    public void setStoryteller(boolean storyteller) {
         this.storyteller = storyteller;
     }
 
@@ -43,19 +43,19 @@ public class UsuarioChat extends Usuario {
         this.persona = persona;
     }
 
-    public Boolean isTyping() {
+    public boolean isTyping() {
         return typing;
     }
 
-    public void setTyping(Boolean typing) {
+    public void setTyping(boolean typing) {
         this.typing = typing;
     }
 
-    public Boolean isFocused() {
+    public boolean isFocused() {
         return focused;
     }
 
-    public void setFocused(Boolean focused) {
+    public void setFocused(boolean focused) {
         this.focused = focused;
     }
     

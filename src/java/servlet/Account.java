@@ -7,6 +7,7 @@
 package servlet;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import dao.UsuarioDAO;
@@ -19,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import kinds.UsuarioSistema;
 import org.apache.commons.mail.EmailException;
+import sistema.GsonFactory;
 import sistema.Mailer;
 import sistema.Validation;
 
@@ -74,7 +76,7 @@ public class Account extends HttpServlet {
                 session.setAttribute("userpassword", user.getPassword());
                 session.setAttribute("userlevel", user.getLevel());
                 
-                Gson gson = new Gson();
+                Gson gson = GsonFactory.getFactory().getGsonExposed();
                 
                 response.setContentType("application/json;charset=UTF-8");
                 response.getWriter().print("{\"user\":"
@@ -97,7 +99,7 @@ public class Account extends HttpServlet {
                 return;
             }
             try {
-                Gson gson = new Gson();
+                Gson gson = GsonFactory.getFactory().getGson();
                 cfg = gson.toJson(gson.fromJson(cfg, JsonObject.class));
                 UsuarioSistema user = new UsuarioSistema();
                 user.setId((Integer) session.getAttribute("userid"));
