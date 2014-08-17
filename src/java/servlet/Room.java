@@ -6,16 +6,20 @@
 
 package servlet;
 
+import dao.MessageDAO;
 import dao.SalaDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import kinds.Message;
 import kinds.Sala;
+import sistema.GsonFactory;
 import sistema.Validation;
 
 /**
@@ -46,6 +50,49 @@ public class Room extends HttpServlet {
         Integer userid = (Integer) session.getAttribute("userid");
         if (userid == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        
+        /**
+         * GET MESSAGES
+         */
+        if (action.equals("messages")) {
+            try {
+                int roomid = Integer.parseInt(request.getParameter("roomid"));
+                ArrayList<Message> messages = MessageDAO.getMessages(roomid, userid);
+                if (messages != null) {
+                    response.setContentType("application/json;charset=UTF-8");
+                    GsonFactory.getFactory().getGson().toJson(messages, response.getWriter());
+                } else {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+            return;
+        }
+        
+        /**
+         * CLEAR ROOM
+         */
+        
+        /**
+         * GET MESSAGES
+         */
+        if (action.equals("clear")) {
+            try {
+                int roomid = Integer.parseInt(request.getParameter("roomid"));
+                int result = SalaDAO.clearRoom(roomid, userid);
+                if (result == 1) {
+                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                } else if (result == 0) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
             return;
         }
         

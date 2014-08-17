@@ -67,15 +67,15 @@ public class SalaDAO {
         }
     }
     
-    public int clearRoom (Sala sala) {
+    public static int clearRoom (int roomid, int userid) {
         Connection dbh = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             dbh = ConnectionPooler.getConnection();
             stmt = dbh.prepareStatement("SELECT 1 FROM chat_sala WHERE id = ? AND creator = ?;");
-            stmt.setInt(1, sala.getId());
-            stmt.setInt(2, sala.getCreatorid());
+            stmt.setInt(1, roomid);
+            stmt.setInt(2, userid);
             
             rs = stmt.executeQuery();
             if (!rs.next()) {
@@ -88,9 +88,9 @@ public class SalaDAO {
             stmt = null;
             
             stmt = dbh.prepareStatement("DELETE FROM chat_sala_msg WHERE roomid = ?;");
-            stmt.setInt(1, sala.getId());
+            stmt.setInt(1, roomid);
             
-            if (stmt.executeUpdate() == 1) {
+            if (stmt.executeUpdate() > 0) {
                 return 1;
             }
             return -1;

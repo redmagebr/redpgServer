@@ -164,18 +164,20 @@ public class SheetDAO {
             
             
             dbh.setAutoCommit(false);
-            stmt = dbh.prepareStatement("INSERT INTO sheet_instance_usuario (sheetid, usuarioid, visualizar, editar, deletar) "
-                                      + "VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE "
-                                      + "visualizar = ?, editar = ?, deletar = ?;");
+            stmt = dbh.prepareStatement("INSERT INTO sheet_instance_usuario (sheetid, usuarioid, visualizar, editar, deletar, promote) "
+                                      + "VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE "
+                                      + "visualizar = ?, editar = ?, deletar = ?, promote = ?;");
             for (SheetPermissao sheet : sheets) {
                 stmt.setInt(1, sheetId);
                 stmt.setInt(2, sheet.getUserid());
                 stmt.setBoolean(3, sheet.isVisualizar());
                 stmt.setBoolean(4, sheet.isEditar());
                 stmt.setBoolean(5, sheet.isDeletar());
-                stmt.setBoolean(6, sheet.isVisualizar());
-                stmt.setBoolean(7, sheet.isEditar());
-                stmt.setBoolean(8, sheet.isDeletar());
+                stmt.setBoolean(6, sheet.isPromote());
+                stmt.setBoolean(7, sheet.isVisualizar());
+                stmt.setBoolean(8, sheet.isEditar());
+                stmt.setBoolean(9, sheet.isDeletar());
+                stmt.setBoolean(10, sheet.isPromote());
                 stmt.executeUpdate();
             }
             dbh.commit();
@@ -307,7 +309,7 @@ public class SheetDAO {
                 sheet.setDeletar(rs.getBoolean("PermissaoV_Deletar"));
                 sheet.setEditar(rs.getBoolean("PermissaoV_Editar"));
                 sheet.setVisualizar(rs.getBoolean("PermissaoV_Visualizar"));
-                sheet.setPromote(rs.getBoolean("PermissaoV_Visualizar"));
+                sheet.setPromote(rs.getBoolean("PermissaoV_Promote"));
                 
                 sp.add(sheet);
             }

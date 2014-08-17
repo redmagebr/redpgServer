@@ -104,18 +104,17 @@ public class MessageDAO {
         }
     }
     
-    public static ArrayList<Message> getMessages (BigDecimal lastReceived, int roomid, int userid) {
+    public static ArrayList<Message> getMessages (int roomid, int userid) {
         Connection dbh = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         ArrayList<Message> messages = new ArrayList<Message>();
         try {
             dbh = ConnectionPooler.getConnection();
-            stmt = dbh.prepareStatement("SELECT * FROM view_chatmensagens WHERE ID_Mensagem > ? AND ID_Sala = ? AND (ID_Destination = ? OR ID_Destination IS NULL OR (ID_Origin = ? AND NOT isClone));");
-            stmt.setBigDecimal(1, lastReceived);
-            stmt.setInt(2, roomid);
+            stmt = dbh.prepareStatement("SELECT * FROM view_chatmensagens WHERE ID_Sala = ? AND (ID_Destination = ? OR ID_Destination IS NULL OR (ID_Origin = ? AND NOT isClone));");
+            stmt.setInt(1, roomid);
+            stmt.setInt(2, userid);
             stmt.setInt(3, userid);
-            stmt.setInt(4, userid);
             
             rs = stmt.executeQuery();
             

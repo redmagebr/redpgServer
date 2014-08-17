@@ -6,6 +6,10 @@
 
 package servlet;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import dao.JogoDAO;
 import dao.SheetDAO;
 import java.io.IOException;
@@ -24,6 +28,7 @@ import kinds.JogoUsuarioSheet;
 import kinds.SheetPermissao;
 import kinds.SheetUsuario;
 import sistema.GsonFactory;
+import sistema.Validation;
 
 /**
  *
@@ -102,6 +107,44 @@ public class Sheet extends HttpServlet {
         }
         
         /**
+         * UPDATE SHEET
+         */
+        if (action.equals("update")) {
+            Validation valid = new Validation();
+            String name = request.getParameter("name");
+            String values = request.getParameter("values");
+            if (!valid.validName(name) || values == null) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+            try {
+                int id = Integer.parseInt(request.getParameter("id"));
+                Gson gson = GsonFactory.getFactory().getGson();
+                JsonObject jvalues = gson.fromJson(values, JsonObject.class);
+
+                kinds.Sheet sheet = new kinds.Sheet();
+                sheet.setId(id);
+                sheet.setNome(name);
+                sheet.setValues(gson.toJson(jvalues));
+
+                SheetDAO dao = new SheetDAO();
+                int result = dao.updateSheet(sheet, userid);
+                if (result == 2) {
+                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                } else if (result == 1) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                } else if (result == 0) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                } else if (result == -1) {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+            } catch (NumberFormatException | JsonSyntaxException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+            return;
+        }
+        
+        /**
          * LIST SHEET PERMISSIONS
          */
         if (action.equals("listPerm")) {
@@ -121,6 +164,108 @@ public class Sheet extends HttpServlet {
             return;
         }
         
+        /**
+         * UPDATE PERMISSIONS
+         */
+        if (action.equals("updatePerm")) {
+            if (request.getParameter("id") == null || request.getParameter("privileges") == null) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                return;
+            }
+            try {
+                int id = Integer.parseInt(request.getParameter("id"));
+                Gson gson = GsonFactory.getFactory().getGson();
+                JsonArray privilegesJson = gson.fromJson(request.getParameter("privileges"), JsonArray.class);
+                SheetPermissao sp;
+                ArrayList<SheetPermissao> sheets = new ArrayList<SheetPermissao>();
+                JsonObject privilegeJson;
+                for (int i = 0; i < privilegesJson.size(); i++) {
+                    privilegeJson = privilegesJson.get(i).getAsJsonObject();
+                    if (!privilegeJson.has("userid") || !privilegeJson.has("visualizar") || !privilegeJson.has("editar")
+                        || !privilegeJson.has("deletar")) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        return;
+                    }
+                    sp = new SheetPermissao();
+
+                    sp.setUserid(privilegeJson.get("userid").getAsInt());
+                    sp.setVisualizar(privilegeJson.get("visualizar").getAsBoolean());
+                    sp.setEditar(privilegeJson.get("editar").getAsBoolean());
+                    sp.setDeletar(privilegeJson.get("deletar").getAsBoolean());
+                    sp.setPromote(privilegeJson.get("promote").getAsBoolean());
+
+                    sheets.add(sp);
+                }
+                int result = SheetDAO.updatePrivileges(sheets, id, userid);
+                if (result == 1) {
+                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                } else if (result == 0) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR );
+                }
+            } catch (NumberFormatException | JsonSyntaxException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+            return;
+        }
+        
+        /**
+         * CREATE SHEET
+         */
+        if (action.equals("create")) {
+            try {
+                Validation valid = new Validation();
+                String name = request.getParameter("name");
+                if (!valid.validName(name)) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    return;
+                }
+                int idJogo = Integer.parseInt(request.getParameter("gameid"));
+                int idStyle = Integer.parseInt(request.getParameter("idstyle"));
+                boolean publica = request.getParameter("publica") != null && request.getParameter("publica").equalsIgnoreCase("true");
+                kinds.Sheet sheet = new kinds.Sheet();
+                sheet.setCriador(userid);
+                sheet.setIdstyle(idStyle);
+                sheet.setNome(name);
+                sheet.setValues("{}");
+                sheet.setPublica(publica);
+                
+                int creation = SheetDAO.createSheet(sheet, userid, idJogo);
+                if (creation == 2) {
+                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                } else if (creation == 1) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                } else if (creation == 0) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+            return;
+        }
+        
+        /**
+         * DELETE SHEET
+         */
+        if (action.equals("delete")) {
+            try {
+                int id = Integer.parseInt(request.getParameter("id"));
+                int result = SheetDAO.deleteSheet(id, userid);
+                if (result == 1) {
+                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                } else if (result == 0) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+            return;
+        }
         
         response.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);
     }

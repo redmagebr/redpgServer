@@ -9,6 +9,7 @@ package servlet;
 import com.google.gson.Gson;
 import dao.SheetStyleDAO;
 import java.io.IOException;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -73,6 +74,30 @@ public class Style extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
+        }
+        
+        /**
+         * LIST STYLES
+         */
+        
+        if (action.equals("list")) {
+            try {
+                int gameid = Integer.parseInt(request.getParameter("id"));
+                ArrayList<SheetStyle> ss = SheetStyleDAO.getStyles(gameid, userid);
+                if (ss != null) {
+                    if (ss.size() > 0) {
+                        response.setContentType("application/json;charset=UTF-8");
+                        GsonFactory.getFactory().getGson().toJson(ss, response.getWriter());
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    }
+                } else {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+            return;
         }
         
         response.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);

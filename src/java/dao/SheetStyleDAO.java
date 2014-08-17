@@ -54,7 +54,7 @@ public class SheetStyleDAO {
         
     }
     
-    public static ArrayList<SheetStyle> getStyles (int id, int userid) throws SQLException {
+    public static ArrayList<SheetStyle> getStyles (int idjogo, int userid) {
         Connection dbh = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -63,7 +63,7 @@ public class SheetStyleDAO {
             dbh = ConnectionPooler.getConnection();
             stmt = dbh.prepareStatement("SELECT styles.ID_Style AS ID_Style, styles.Nome_Estilo as Nome_Estilo FROM view_styles styles "
                     + "WHERE (ID_Jogo = ? AND ID_Usuario = ? AND sheetCreator = 1) OR isPublic = 1;");
-            stmt.setInt(1, id);
+            stmt.setInt(1, idjogo);
             stmt.setInt(2, userid);
             rs = stmt.executeQuery();
             SheetStyle ss;
@@ -75,7 +75,7 @@ public class SheetStyleDAO {
             }
             return styles;
         } catch (SQLException e) {
-            throw e;
+            return null;
         } finally {
             ConnectionPooler.closeResultset(rs);
             ConnectionPooler.closeStatement(stmt);
