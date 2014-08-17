@@ -6,6 +6,7 @@
 
 package kinds;
 
+import com.google.gson.annotations.Expose;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,7 +18,7 @@ import javax.websocket.Session;
  */
 public class UsuarioSocket extends UsuarioChat {
     private final Set<Session> sessions = Collections.synchronizedSet(new HashSet<Session>());
-    private boolean online;
+    @Expose private boolean online;
 
     public boolean isOnline() {
         return online;

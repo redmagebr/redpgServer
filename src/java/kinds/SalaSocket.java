@@ -6,6 +6,7 @@
 
 package kinds;
 
+import com.google.gson.annotations.Expose;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,17 +22,17 @@ public class SalaSocket {
     private volatile ConcurrentHashMap<Integer, UsuarioSocket> users = new ConcurrentHashMap<Integer, UsuarioSocket>();
     private volatile AtomicInteger fakeCount = new AtomicInteger();
     private volatile Set<Session> sessions = Collections.synchronizedSet(new HashSet<Session>());
-    private volatile String jsonMemory;
+    @Expose private volatile String jsonMemory;
     
-    private void addUser (UsuarioSocket user) {
-        users.put(user.getId(), user);
+    public synchronized UsuarioSocket addUser (UsuarioSocket user) {
+        return users.putIfAbsent(user.getId(), user);
     }
     
-    private void removeUser (int userid) {
-        users.remove(userid);
+    public synchronized UsuarioSocket removeUser (int userid) {
+        return users.remove(userid);
     }
     
-    private boolean addSession (int userid, Session session) {
+    public synchronized boolean addSession (int userid, Session session) {
         if (!users.containsKey(userid)) {
             return false;
         }
@@ -41,7 +42,7 @@ public class SalaSocket {
         return true;
     }
     
-    private boolean removeSession (int userid, Session session) {
+    public synchronized boolean removeSession (int userid, Session session) {
         if (!users.containsKey(userid)) {
             return false;
         }
@@ -51,15 +52,15 @@ public class SalaSocket {
         return true;
     }
     
-    private UsuarioSocket getUser (int userid) {
+    public UsuarioSocket getUser (int userid) {
         return users.get(userid);
     }
     
-    private ConcurrentHashMap<Integer, UsuarioSocket> getUsers () {
+    public ConcurrentHashMap<Integer, UsuarioSocket> getUsers () {
         return users;
     }
     
-    private Set<Session> getSessions () {
+    public Set<Session> getSessions () {
         return sessions;
     }
     

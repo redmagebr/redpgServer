@@ -16,6 +16,7 @@ import java.util.Random;
 import kinds.Usuario;
 import kinds.UsuarioChat;
 import kinds.UsuarioSistema;
+import kinds.UsuarioSocket;
 import sistema.ConnectionPooler;
 
 /**
@@ -41,13 +42,14 @@ public class UsuarioDAO {
         try {
             dbh = ConnectionPooler.getConnection();
             
-            stmt = dbh.prepareStatement("SELECT level, email, id, nickname, nicknamesufix, name, config FROM usuario WHERE email = ? AND password = ?");
+            stmt = dbh.prepareStatement("SELECT level, id, nickname, nicknamesufix, name, config FROM usuario WHERE email = ? AND password = ?");
             stmt.setString(1, email);
             stmt.setString(2, password);
             rs = stmt.executeQuery();
             if (rs.next()) {
                 user = new UsuarioSistema();
-                user.setEmail(rs.getString("email"));
+                user.setEmail(email);
+                user.setPassword(password);
                 user.setId(rs.getInt("id"));
                 user.setNickname(rs.getString("nickname"));
                 user.setNicknamesufix(rs.getString("nicknamesufix"));
@@ -424,6 +426,37 @@ public class UsuarioDAO {
         } catch (SQLException ex) {
             return -1;
         } finally {
+            ConnectionPooler.closeStatement(stmt);
+            ConnectionPooler.closeConnection(dbh);
+        }
+    }
+    
+    public static ArrayList<UsuarioSocket> getUsuarioSockets (int roomid) {
+        Connection dbh = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            dbh = ConnectionPooler.getConnection();
+            stmt = dbh.prepareStatement("SELECT ID_Usuario, Nick_Usuario, Nicksufix_Usuario, isStoryteller FROM view_salausuario WHERE ID_Sala = ?;");
+            stmt.setInt(1, roomid);
+            rs = stmt.executeQuery();
+            ArrayList<UsuarioSocket> users = new ArrayList<UsuarioSocket>();
+            UsuarioSocket user;
+            
+            while (rs.next()) {
+                user = new UsuarioSocket();
+                user.setId(rs.getInt("ID_Usuario"));
+                user.setNickname(rs.getString("Nick_Usuario"));
+                user.setNicknamesufix(rs.getString("Nicksufix_Usuario"));
+                user.setStoryteller(rs.getBoolean("isStoryteller"));
+                users.add(user);
+            }
+            
+            return users;
+        } catch (SQLException ex) {
+            return null;
+        } finally {
+            ConnectionPooler.closeResultset(rs);
             ConnectionPooler.closeStatement(stmt);
             ConnectionPooler.closeConnection(dbh);
         }
