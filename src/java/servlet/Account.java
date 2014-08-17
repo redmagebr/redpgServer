@@ -43,7 +43,25 @@ public class Account extends HttpServlet {
             throws ServletException, IOException {
         String action = request.getParameter("action");
         if (action == null) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            HttpSession session = request.getSession();
+            String login = (String) session.getAttribute("userlogin");
+            String password = (String) session.getAttribute("userpassword");
+            if (login != null && password != null) {
+                UsuarioSistema user = UsuarioDAO.getUsuarioSistema(login, password);
+                if (user == null) {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                } else if (user.getEmail() == null) {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                } else {
+                    Gson gson = GsonFactory.getFactory().getGsonExposed();
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().print("{\"user\":"
+                            + gson.toJson(user)
+                            + ", \"session\":"
+                            + "\"" + session.getId() + "\"}"
+                    );
+                }
+            }
             return;
         }
         

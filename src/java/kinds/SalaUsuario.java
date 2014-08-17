@@ -10,9 +10,18 @@ package kinds;
  *
  * @author reddo
  */
-public class SalaUsuario {
+public class SalaUsuario extends Sala {
     private boolean logger;
     private boolean storyteller;
+    private boolean cleaner;
+
+    public boolean isCleaner() {
+        return cleaner;
+    }
+
+    public void setCleaner(boolean cleaner) {
+        this.cleaner = cleaner;
+    }
 
     public boolean isLogger() {
         return logger;

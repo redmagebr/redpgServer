@@ -14,10 +14,19 @@ public class JogoUsuario extends Jogo {
     private boolean createSheet;
     private boolean editSheet;
     private boolean deleteSheet;
+    private boolean viewSheet;
     private boolean createRoom;
     private boolean invite;
     private boolean promote;
+    
+    public boolean isViewSheet() {
+        return viewSheet;
+    }
 
+    public void setViewSheet(boolean viewSheet) {
+        this.viewSheet = viewSheet;
+    }
+    
     public boolean isCreateSheet() {
         return createSheet;
     }
