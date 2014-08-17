@@ -53,7 +53,10 @@ public class Account extends HttpServlet {
             HttpSession session = request.getSession();
             response.getWriter().print("{\"logged\":" +
                     (session.getAttribute("userid") != null ? "true" : "false") + "}");
-        } else if (action.equals("login")) {
+            return;
+        }
+        
+        if (action.equals("login")) {
             String login = request.getParameter("login");
             String password = request.getParameter("password");
             if (login == null || password == null) {
@@ -95,7 +98,9 @@ public class Account extends HttpServlet {
                 );
             }
             return;
-        } else if (action.equals("StoreConfig")) {
+        }
+        
+        if (action.equals("StoreConfig")) {
             HttpSession session = request.getSession();
 
             if (session.getAttribute("userid") == null) {
@@ -127,7 +132,9 @@ public class Account extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
             return;
-        } else if (action.equals("confirm")) {
+        }
+        
+        if (action.equals("confirm")) {
             String uuid = request.getParameter("uuid");
             int result = UsuarioDAO.confirmAccount(uuid);
             if (result < 0) {
@@ -137,7 +144,10 @@ public class Account extends HttpServlet {
             } else {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             }
-        } else if (action.equals("newAccount")) {
+            return;
+        }
+        
+        if (action.equals("newAccount")) {
             Validation validator = new Validation();
         
             String email = request.getParameter("email");
@@ -171,15 +181,23 @@ public class Account extends HttpServlet {
                 response.setStatus(420);
             } else if (result == -1) {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            }      
-        } else if (action.equals("resendUUID")) {
+            } 
+            return;
+        }
+        
+        if (action.equals("resendUUID")) {
             String email = request.getParameter("email");
             resendUuid(email);
             return;
-        } else if (action.equals("logout")) {
+        }
+        
+        if (action.equals("logout")) {
             request.getSession().invalidate();
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            return;
         }
+        
+        response.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

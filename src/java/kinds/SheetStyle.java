@@ -6,11 +6,13 @@
 
 package kinds;
 
+import java.io.Serializable;
+
 /**
  *
  * @author reddo
  */
-public class Style {
+public class SheetStyle implements Serializable {
     private Integer id;
     private Boolean publicStyle;
     private Boolean seguro;

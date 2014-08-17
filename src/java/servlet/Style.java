@@ -6,24 +6,24 @@
 
 package servlet;
 
-import dao.SalaDAO;
+import com.google.gson.Gson;
+import dao.SheetStyleDAO;
 import java.io.IOException;
-import java.io.PrintWriter;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import kinds.Sala;
-import sistema.Validation;
+import kinds.SheetStyle;
+import sistema.GsonFactory;
 
 /**
  *
  * @author reddo
  */
-@WebServlet(name = "Room", urlPatterns = {"/Room"})
-public class Room extends HttpServlet {
+@WebServlet(name = "Style", urlPatterns = {"/Style"})
+public class Style extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -50,61 +50,30 @@ public class Room extends HttpServlet {
         }
         
         /**
-         * CREATE ROOM
+         * REQUEST STYLE
          */
-        if (action.equals("create")) {
-            Validation valid = new Validation();
-            String name = request.getParameter("name");
-            if (!valid.validName(name)) {
+        if (action.equals("request")) {
+            try {
+                int requestId = Integer.parseInt(request.getParameter("id"));
+                SheetStyle style = SheetStyleDAO.getStyle(requestId, userid);
+                if (style != null) {
+                    if (style.getName() != null) {
+                        Gson gson = GsonFactory.getFactory().getGson();
+                        style.setName(gson.toJson(style.getName()));
+                        request.setAttribute("SheetStyle", style);
+                        request.getRequestDispatcher("sheetStyle.jsp")
+                            .forward(request,response);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    }
+                } else {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+            } catch (NumberFormatException e) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
-            try {
-                Sala sala = new Sala();
-                sala.setName(name);
-                sala.setCreatorid((Integer) session.getAttribute("userid"));
-                sala.setDescription(request.getParameter("description"));
-                sala.setPrivateRoom(request.getParameter("private").equalsIgnoreCase("true"));
-                sala.setStreamable(request.getParameter("streamable").equalsIgnoreCase("true"));
-                sala.setPlayByPost(request.getParameter("playbypost").equalsIgnoreCase("true"));
-                int gameid = Integer.parseInt(request.getParameter("gameid"));
-                int result = SalaDAO.createRoom(sala, gameid);
-                if (result < 0) {
-                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                } else if (result == 0) {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                } else {
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-                }
-            } catch (NumberFormatException e) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            }
-            return;
         }
-        
-        
-        /**
-         * DELETE ROOM
-         */
-        if (action.equals("delete")) {
-            try {
-                Sala sala = new Sala();
-                sala.setCreatorid(userid);
-                sala.setId(Integer.parseInt(request.getParameter("id")));
-                int result = SalaDAO.deleteRoom(sala);
-                if (result == 1) {
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-                } else if (result == -1) {
-                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                } else {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                }
-            } catch (NumberFormatException e) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            }
-            return;
-        }
-        
         
         response.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);
     }

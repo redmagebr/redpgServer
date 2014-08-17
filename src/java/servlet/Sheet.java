@@ -7,26 +7,30 @@
 package servlet;
 
 import dao.JogoDAO;
+import dao.SheetDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import kinds.JogoConvite;
-import kinds.Usuario;
+import kinds.JogoUsuarioSheet;
+import kinds.SheetPermissao;
+import kinds.SheetUsuario;
 import sistema.GsonFactory;
-import sistema.Validation;
 
 /**
  *
  * @author reddo
  */
-@WebServlet(name = "Invite", urlPatterns = {"/Invite"})
-public class Invite extends HttpServlet {
+@WebServlet(name = "Sheet", urlPatterns = {"/Sheet"})
+public class Sheet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -53,37 +57,32 @@ public class Invite extends HttpServlet {
         }
         
         /**
-         * SEND INVITE
+         * LOAD SHEET
          */
-        if (action.equals("send")) {
-            Validation valid = new Validation();
-            String name = request.getParameter("name");
-            if (!valid.validShortName(request.getParameter("nickname")) ||
-                   !valid.validNickSufix(request.getParameter("nicksufix"))
-                  ) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
+        if (action.equals("request")) {
             try {
-                int jogoid = Integer.parseInt(request.getParameter("gameid"));
-                String mensagem = request.getParameter("message");
-                Usuario player = new Usuario();
-                player.setNickname(request.getParameter("nickname"));
-                player.setNicknamesufix(request.getParameter("nicksufix"));
-                int result = JogoDAO.enviaConvite(jogoid, player, userid, mensagem);
-                // -4: Already accepted invitation -3: Already invited -2: no permission -1: internal error 0: player not found
-                if (result == 1) {
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-                } else if (result == -4) {
-                    response.setStatus(423);
-                } else if (result == -3) {
-                    response.setStatus(HttpServletResponse.SC_CONFLICT);
-                } else if (result == -2) {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                } else if (result == -1) {
+                int id = Integer.parseInt(request.getParameter("id"));
+                SheetUsuario sheet = SheetDAO.getSheet(id, userid);
+                if (sheet != null) {
+                    if (sheet.getNome() != null) {
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().print("[{"
+                                + "\"id\":" + sheet.getId()
+                                + ",\"criador\":" + sheet.getCriador()
+                                + ",\"idstyle\":" + sheet.getIdstyle()
+                                + ",\"gameid\":" + sheet.getGameid()
+                                + ",\"segura\":" + (sheet.isSegura() ? "true" : "false")
+                                + ",\"visualizar\":" + (sheet.isVisualizar()? "true" : "false")
+                                + ",\"editar\":" + (sheet.isEditar()? "true" : "false")
+                                + ",\"deletar\":" + (sheet.isDeletar()? "true" : "false")
+                                + ",\"values\":" + sheet.getValues()
+                                + ",\"nome\":" + GsonFactory.getFactory().getGson().toJson(sheet.getNome())
+                                + "}]");
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    }
+                } else {
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                } else if (result == 0) {
-                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 }
             } catch (NumberFormatException e) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -91,32 +90,30 @@ public class Invite extends HttpServlet {
             return;
         }
         
+        
         /**
-         * LIST INVITES
+         * LIST SHEETS
          */
         if (action.equals("list")) {
-            ArrayList<JogoConvite> convites = JogoDAO.getListaConvitesPendentes(userid);
-            if (convites == null) {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                return;
-            }
-            GsonFactory.getFactory().getGson().toJson(convites, response.getWriter());
+            ArrayList<JogoUsuarioSheet> jogos = JogoDAO.getJogosSheets(userid);
+            response.setContentType("application/json;charset=UTF-8");
+            GsonFactory.getFactory().getGson().toJson(jogos, response.getWriter());
             return;
         }
         
         /**
-         * ACCEPT INVITE
+         * LIST SHEET PERMISSIONS
          */
-        if (action.equals("accept")) {
+        if (action.equals("listPerm")) {
             try {
-                int gameid = Integer.parseInt(request.getParameter("gameid"));
-                int result = JogoDAO.aceitarConvite(gameid, userid);
-                if (result == 1) {
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-                } else if (result == -1) {
+                ArrayList<SheetPermissao> sp = SheetDAO.getPrivileges(Integer.parseInt(request.getParameter("id")), userid);
+                if (sp == null) {
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                } else if (result == 0) {
+                } else if (sp.size() == 0) {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                } else {
+                    response.setContentType("application/json;charset=UTF-8");
+                    GsonFactory.getFactory().getGson().toJson(sp, response.getWriter());
                 }
             } catch (NumberFormatException e) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -124,25 +121,6 @@ public class Invite extends HttpServlet {
             return;
         }
         
-        /**
-         * REJECT INVITE
-         */
-        if (action.equals("reject")) {
-            try {
-                int gameid = Integer.parseInt(request.getParameter("gameid"));
-                int result = JogoDAO.aceitarConvite(gameid, userid);
-                if (result == 1) {
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-                } else if (result == -1) {
-                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                } else if (result == 0) {
-                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                }
-            } catch (NumberFormatException e) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            }
-            return;
-        }
         
         response.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);
     }
