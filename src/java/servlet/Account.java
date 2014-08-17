@@ -57,17 +57,26 @@ public class Account extends HttpServlet {
             String login = request.getParameter("login");
             String password = request.getParameter("password");
             if (login == null || password == null) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                return;
+                HttpSession session = request.getSession();
+                if (session.getAttribute("userid") == null) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    return;
+                }
+                login = (String) session.getAttribute("userlogin");
+                password = (String) session.getAttribute("userpassword");
             }
             
             UsuarioSistema user = UsuarioDAO.getUsuarioSistema(login, password);
             
             if (user == null) {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            } else if (user.getId() == null) {
+            } else if (user.getEmail() == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             } else {
+                if (user.getLevel() < 1) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
                 response.setStatus(HttpServletResponse.SC_OK);
                 HttpSession session = request.getSession();
                 session.setAttribute("userid", user.getId());

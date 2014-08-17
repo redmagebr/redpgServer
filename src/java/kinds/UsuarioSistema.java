@@ -18,7 +18,7 @@ public class UsuarioSistema extends Usuario {
     private String email;
     private String password;
     private String name;
-    @Expose private int level;
+    private int level;
     @Expose private String config;
     
     private void prepareJSON () {

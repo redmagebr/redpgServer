@@ -14,7 +14,7 @@ public class GsonFactory {
     
     public static GsonFactory getFactory () {
         if (factory == null) {
-            synchronized (factory) {
+            synchronized (GsonFactory.class) {
                 if (factory == null) {
                     factory = new GsonFactory();
                 }
