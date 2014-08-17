@@ -30,7 +30,7 @@ public class Mailer {
               + "Obrigado por se registrar no sistema!\n\n"
               + "Para começar a utilizar o sistema, é necessário ativar a sua conta.\n"
               + "Você pode fazer isso seguindo o link a seguir:\n\n"
-              + "http://redpg.com.br/app/index.html?confirm#" + uuid
+              + "http://redpg.com.br/index.html?confirm#" + uuid
               + "\n\n\nObrigado por ter registrado sua conta!");
         
         
@@ -52,7 +52,7 @@ public class Mailer {
 "                    <p>Obrigado por se registrar no sistema!</p>\n" +
 "                    <p>Para começar a utilizar o sistema, é necessário ativar a sua conta.\n" +
 "                    <p>Você pode fazer isso seguindo o link a seguir:</p>\n" +
-"                    <p><a href='http://redpg.com.br/app/index.html?confirm#" + uuid + "' target='_blank'>http://redpg.com.br/app/index.html?confirm#" + uuid + "</a></p>\n" +
+"                    <p><a href='http://redpg.com.br/index.html?confirm#" + uuid + "' target='_blank'>http://redpg.com.br/app/index.html?confirm#" + uuid + "</a></p>\n" +
 "                    <p style='margin-top: 20px;'>Obrigado por ter registrado sua conta!</p>\n" +
 "                </div>\n" +
 "            </div>\n" +

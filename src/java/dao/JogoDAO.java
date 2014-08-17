@@ -302,15 +302,41 @@ public class JogoDAO {
         PreparedStatement stmt = null;
         try {
             dbh = ConnectionPooler.getConnection();
-            
+            dbh.setAutoCommit(false);
             stmt = dbh.prepareStatement("UPDATE jogo_convite SET accepted = 1 WHERE idjogo = ? AND userid = ?;");
             stmt.setInt(1, jogoid);
             stmt.setInt(2, userid);
+            if(stmt.executeUpdate() < 1) {
+                dbh.rollback();
+                return 0;
+            }
+            ConnectionPooler.closeStatement(stmt);
             
-            return stmt.executeUpdate();
+            stmt = dbh.prepareStatement("INSERT INTO jogo_usuario (jogoid, userid) VALUES (?, ?);");
+            stmt.setInt(1, jogoid);
+            stmt.setInt(2, userid);
+            
+            if (stmt.executeUpdate() <= 0) {
+                dbh.rollback();
+                return 0;
+            }
+            
+            dbh.commit();
+            
+            return 1;
         } catch (SQLException e) {
+            if (dbh != null) {
+                try {
+                    dbh.rollback();
+                } catch (SQLException ex) { }
+            }
             return -1;
         } finally {
+            if (dbh != null) {
+                try {
+                    dbh.setAutoCommit(true);
+                } catch (SQLException ex) {}
+            }
             ConnectionPooler.closeStatement(stmt);
             ConnectionPooler.closeConnection(dbh);
         }

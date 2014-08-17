@@ -17,7 +17,7 @@ public class UsuarioChat extends Usuario {
     @Expose private String avatar;
     @Expose private String persona;
     @Expose private boolean typing;
-    @Expose private boolean focused;
+    @Expose private boolean focused = true;
 
     public boolean isStoryteller() {
         return storyteller;

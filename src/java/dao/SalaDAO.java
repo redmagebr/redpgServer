@@ -132,7 +132,7 @@ public class SalaDAO {
         ResultSet rs = null;
         try {
             dbh = ConnectionPooler.getConnection();
-            stmt = dbh.prepareStatement("SELECT Room_Memory FROM view_jogosala WHERE ID_Sala = ?;");
+            stmt = dbh.prepareStatement("SELECT Room_Memory FROM view_jogosalas WHERE ID_Sala = ?;");
             stmt.setInt(1, roomid);
             rs = stmt.executeQuery();
             

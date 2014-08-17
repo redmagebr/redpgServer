@@ -13,6 +13,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import kinds.Usuario;
 import kinds.UsuarioChat;
 import kinds.UsuarioSistema;
@@ -454,6 +456,7 @@ public class UsuarioDAO {
             
             return users;
         } catch (SQLException ex) {
+            Logger.getLogger(UsuarioDAO.class.getName()).log(Level.SEVERE, ex.getMessage());
             return null;
         } finally {
             ConnectionPooler.closeResultset(rs);

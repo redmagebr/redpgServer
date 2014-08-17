@@ -24,15 +24,15 @@ public class SalaSocket {
     private volatile Set<Session> sessions = Collections.synchronizedSet(new HashSet<Session>());
     @Expose private volatile String jsonMemory;
     
-    public synchronized UsuarioSocket addUser (UsuarioSocket user) {
+    public UsuarioSocket addUser (UsuarioSocket user) {
         return users.putIfAbsent(user.getId(), user);
     }
     
-    public synchronized UsuarioSocket removeUser (int userid) {
+    public UsuarioSocket removeUser (int userid) {
         return users.remove(userid);
     }
     
-    public synchronized boolean addSession (int userid, Session session) {
+    public boolean addSession (int userid, Session session) {
         if (!users.containsKey(userid)) {
             return false;
         }
@@ -42,7 +42,7 @@ public class SalaSocket {
         return true;
     }
     
-    public synchronized boolean removeSession (int userid, Session session) {
+    public boolean removeSession (int userid, Session session) {
         if (!users.containsKey(userid)) {
             return false;
         }
@@ -62,6 +62,10 @@ public class SalaSocket {
     
     public Set<Session> getSessions () {
         return sessions;
+    }
+    
+    public int sessionSize () {
+        return sessions.size();
     }
     
     public int getFakeId () {

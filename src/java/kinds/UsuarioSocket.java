@@ -45,4 +45,8 @@ public class UsuarioSocket extends UsuarioChat {
     public Set<Session> getSessions () {
         return this.sessions;
     }
+    
+    public int sessionsSize () {
+        return this.sessions.size();
+    }
 }
