@@ -90,6 +90,8 @@ public class Chat {
             setFocused(this.userid, this.roomid, message);
         } else if (action.equals("message")) {
             sendMessage(userid, roomid, peer, message);
+        } else if (action.equals("persona")) {
+            setPersona(userid, roomid, peer, message);
         }
         if (this.roomid == null) {
             return null;
@@ -181,6 +183,44 @@ public class Chat {
                     other.getBasicRemote().sendText("[\"focused\"," + userid + "," + (user.isFocused()? "1" : "0") + "]");
                 } catch (IOException ex) { }
             }
+        }
+    }
+    
+    public static void setPersona (int userid, int roomid, Session peer, String message) {
+        try {
+            Gson gson = GsonFactory.getFactory().getGson();
+            JsonObject personaJSON = gson.fromJson(message, JsonObject.class);
+            
+            SalaSocket room = (SalaSocket) rooms.get(roomid);
+            UsuarioSocket user = room.getUser(userid);
+            
+            String persona = null;
+            String avatar = null;
+            
+            if (personaJSON.has("persona") && !personaJSON.get("persona").isJsonNull()) {
+                persona = (personaJSON.get("persona").getAsString());
+            }
+            
+            if (personaJSON.has("avatar") && !personaJSON.get("avatar").isJsonNull()) {
+                avatar = (personaJSON.get("avatar").getAsString());
+            }
+            
+            user.setAvatar(avatar);
+            user.setPersona(persona);
+            
+            String stringified = "[\"persona\","
+                    + userid + ",{\"persona\":" + gson.toJson(persona)
+                    + ",\"avatar\":" + gson.toJson(avatar) + "}]";
+            
+            for (Session other : room.getSessions()) {
+                try {
+                    other.getBasicRemote().sendText(stringified);
+                } catch (IOException ex) { }
+            }
+        } catch (JsonSyntaxException e) {
+            try {
+                peer.close();
+            } catch (IOException ex) { }
         }
     }
     
