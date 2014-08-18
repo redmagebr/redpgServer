@@ -21,6 +21,23 @@ import sistema.ConnectionPooler;
  * @author reddo
  */
 public class SalaDAO {
+    public static void storeMemory (SalaSocket sala, int roomid) {
+        Connection dbh = null;
+        PreparedStatement stmt = null;
+        try {
+            dbh = ConnectionPooler.getConnection();
+            stmt = dbh.prepareStatement("UPDATE chat_sala SET memory = ? WHERE id = ?;");
+            stmt.setString(1, sala.getJsonMemory());
+            stmt.setInt(2, roomid);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            
+        } finally {
+            ConnectionPooler.closeStatement(stmt);
+            ConnectionPooler.closeConnection(dbh);
+        }
+    }
+    
     public static int createRoom (Sala sala, int gameid) {
         Connection dbh = null;
         PreparedStatement stmt = null;

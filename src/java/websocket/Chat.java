@@ -83,6 +83,9 @@ public class Chat {
                 } catch (IOException ex) {}
                 return null;
             }
+            try {
+                peer.getBasicRemote().sendText("[\"memory\"," + this.roomid + "," + ((SalaSocket) rooms.get(this.roomid)).getJsonMemory() + "]");
+            } catch (IOException ex) { }
             return "[\"inroom\"," + GsonFactory.getFactory().getGsonExposed().toJson(((SalaSocket) rooms.get(this.roomid)).getUsers()) + "]";
         } else if (action.equals("typing")) {
             setTyping(this.userid, this.roomid, message);
@@ -92,6 +95,8 @@ public class Chat {
             sendMessage(userid, roomid, peer, message);
         } else if (action.equals("persona")) {
             setPersona(userid, roomid, peer, message);
+        } else if (action.equals("memory")) {
+            setMemory(userid, roomid, peer, message);
         }
         if (this.roomid == null) {
             return null;
@@ -218,9 +223,7 @@ public class Chat {
                 } catch (IOException ex) { }
             }
         } catch (JsonSyntaxException e) {
-            try {
-                peer.close();
-            } catch (IOException ex) { }
+            
         }
     }
     
@@ -315,10 +318,33 @@ public class Chat {
                     }
                 }
             } catch (JsonSyntaxException e) {
-                peer.close();
                 return;
             }
         } catch (IOException e) { return; }
+    }
+
+    private static void setMemory(Integer userid, Integer roomid, Session peer, String message) {
+        SalaSocket room = (SalaSocket) rooms.get(roomid);
+        UsuarioSocket user = room.getUser(userid);
+        if (!user.isStoryteller()) {
+            try {
+                peer.close();
+            } catch (IOException ex) { }
+            return;
+        }
+        
+        try {
+            Gson gson = GsonFactory.getFactory().getGson();
+            String memory = gson.toJson(gson.fromJson(message, JsonObject.class));
+            if (memory == null || memory.equals(null) || memory.charAt(0) != '{') {
+                memory = "{}";
+            }
+            room.setJsonMemory(memory);
+            for (Session other : room.getSessions()) {
+                other.getBasicRemote().sendText("[\"memory\"," + roomid + "," + memory + "]");
+            }
+            SalaDAO.storeMemory(room, roomid);
+        } catch (IOException e) { }
     }
     
 }
