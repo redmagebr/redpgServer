@@ -88,11 +88,16 @@ public class Account extends HttpServlet {
                 session.setAttribute("userpassword", user.getPassword());
                 session.setAttribute("userlevel", user.getLevel());
                 
-                Gson gson = GsonFactory.getFactory().getGsonExposed();
+                Gson gson = GsonFactory.getFactory().getGson();
                 
                 response.setContentType("application/json;charset=UTF-8");
                 response.getWriter().print("{\"user\":"
-                        + gson.toJson(user)
+                        + "{"
+                        + "\"id\":" + user.getId()
+                        + ",\"nickname\":" + gson.toJson(user.getNickname())
+                        + ",\"nicknamesufix\":" + gson.toJson(user.getNicknamesufix())
+                        + ",\"config\":" + user.getConfig()
+                        + "}"
                         + ", \"session\":"
                         + "\"" + session.getId() + "\"}"
                 );
