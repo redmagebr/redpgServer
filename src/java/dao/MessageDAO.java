@@ -49,7 +49,7 @@ public class MessageDAO {
             if (destinations != null) {
                 for (k = 0; k < destinations.size(); k++) {
                     stmt.setInt(6, destinations.get(k));
-                    stmt.setBoolean(7, !((k + 1) == destinations.size()));
+                    stmt.setBoolean(7, !((k + 1) == destinations.size() || message.isClone()));
                     if (stmt.executeUpdate() < 1) {
                         dbh.rollback();
                         return false;

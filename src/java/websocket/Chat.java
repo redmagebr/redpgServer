@@ -268,6 +268,8 @@ public class Chat {
                     return;
                 }
                 
+                message.setClone(messageJson.get("clone").getAsBoolean());
+                
                 message.setSpecial(gson.toJson(message.getSpecialObj()));
                 message.unsetSpecialObj();
                 message.setSendDate(today);
