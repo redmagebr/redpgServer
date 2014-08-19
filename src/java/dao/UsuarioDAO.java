@@ -247,8 +247,8 @@ public class UsuarioDAO {
             
             dbh.setAutoCommit(false);
             stmt = dbh.prepareStatement("INSERT INTO usuario " +
-                                        "(email, password, name, nickname, nicknamesufix, config) " +
-                                        "VALUES (?, ?, ?, ?, ?, ?);", Statement.RETURN_GENERATED_KEYS);
+                                        "(email, password, name, nickname, nicknamesufix, config, level) " +
+                                        "VALUES (?, ?, ?, ?, ?, ?, 1);", Statement.RETURN_GENERATED_KEYS);
             stmt.setString(1, usuario.getEmail());
             stmt.setString(2, usuario.getPassword());
             stmt.setString(3, usuario.getName());

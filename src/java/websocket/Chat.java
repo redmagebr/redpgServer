@@ -83,10 +83,7 @@ public class Chat {
                 } catch (IOException ex) {}
                 return null;
             }
-            try {
-                peer.getBasicRemote().sendText("[\"memory\"," + this.roomid + "," + ((SalaSocket) rooms.get(this.roomid)).getJsonMemory() + "]");
-            } catch (IOException ex) { }
-            return "[\"inroom\"," + GsonFactory.getFactory().getGsonExposed().toJson(((SalaSocket) rooms.get(this.roomid)).getUsers()) + "]";
+            return "[\"getroom\"," + GsonFactory.getFactory().getGsonExposed().toJson(((SalaSocket) rooms.get(this.roomid)).getUsers()) + "," + ((SalaSocket) rooms.get(this.roomid)).getJsonMemory() + "]";
         } else if (action.equals("typing")) {
             setTyping(this.userid, this.roomid, message);
         } else if (action.equals("focused")) {
@@ -97,6 +94,8 @@ public class Chat {
             setPersona(userid, roomid, peer, message);
         } else if (action.equals("memory")) {
             setMemory(userid, roomid, peer, message);
+        } else if (action.equals("users") && message.equals("1")) {
+            return "[\"getroom\"," + GsonFactory.getFactory().getGsonExposed().toJson(((SalaSocket) rooms.get(this.roomid)).getUsers()) + "]";
         }
         if (this.roomid == null) {
             return null;

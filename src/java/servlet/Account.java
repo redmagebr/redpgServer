@@ -179,7 +179,7 @@ public class Account extends HttpServlet {
             int result = UsuarioDAO.createAccount(usuario);
             if (result == 1) {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-                resendUuid(usuario.getEmail());
+                //resendUuid(usuario.getEmail());
             } else if (result == -3) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
             } else if (result == -2) {
