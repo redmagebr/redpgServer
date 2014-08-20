@@ -18,7 +18,16 @@ public class UsuarioChat extends Usuario {
     @Expose private String persona;
     @Expose private boolean typing;
     @Expose private boolean focused = true;
+    @Expose private boolean idle;
 
+    public boolean isIdle() {
+        return idle;
+    }
+
+    public void setIdle(boolean idle) {
+        this.idle = idle;
+    }
+    
     public boolean isStoryteller() {
         return storyteller;
     }

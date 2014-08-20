@@ -45,6 +45,7 @@ public class Chat {
     @OnOpen
     public void onOpen (Session peer, EndpointConfig config) {
         HttpSession session = ((HttpSession) config.getUserProperties().get("httpSession"));
+        peer.setMaxIdleTimeout(15000);
         if (session != null) {
             this.userid = (Integer) session.getAttribute("userid");
         }
@@ -62,19 +63,17 @@ public class Chat {
         }
         int delimiter = message.indexOf(";");
         if (delimiter < 0 || (delimiter + 1) >= message.length()) {
-            try {
-                peer.close();
-            } catch (IOException ex) { }
+            return null;
         }
         String action = message.substring(0, delimiter);
         message = message.substring(delimiter + 1, message.length());
-        if (action.equals("room") && this.roomid == null) {
+        if (action.equals("room")) {
+            if (this.roomid != null) {
+                leaveRoom(this.userid, this.roomid, peer);
+            }
             try {
                 this.roomid = Integer.parseInt(message);
             } catch (NumberFormatException e) {
-                try {
-                    peer.close();
-                } catch (IOException ex) {}
                 return null;
             }
             if (!enterRoom(this.userid, this.roomid, peer)) {
@@ -88,6 +87,8 @@ public class Chat {
             setTyping(this.userid, this.roomid, message);
         } else if (action.equals("focused")) {
             setFocused(this.userid, this.roomid, message);
+        } else if (action.equals("idle")) {
+            setIdle(this.userid, this.roomid, message);
         } else if (action.equals("message")) {
             sendMessage(userid, roomid, peer, message);
         } else if (action.equals("persona")) {
@@ -109,20 +110,24 @@ public class Chat {
         if (this.roomid == null) {
             return;
         }
+        leaveRoom (userid, roomid, peer);
+    }
+    
+    public static void leaveRoom (int userid, int roomid, Session peer) {
         synchronized (rooms) {
-            SalaSocket room = (SalaSocket) rooms.get(this.roomid);
+            SalaSocket room = (SalaSocket) rooms.get(roomid);
             if (room == null) {
                 return;
             }
             synchronized (room) {
-                room.removeSession(this.userid, peer);
+                room.removeSession(userid, peer);
                 if (room.sessionSize() < 1) {
-                    rooms.remove(this.roomid);
+                    rooms.remove(roomid);
                 } else {
-                    if (!room.getUser(this.userid).isOnline()) {
+                    if (!room.getUser(userid).isOnline()) {
                         for (Session other : room.getSessions()) {
                             try {
-                                other.getBasicRemote().sendText("[\"left\"," + this.userid + "]");
+                                other.getBasicRemote().sendText("[\"left\"," + userid + "]");
                             } catch (IOException ex) { }
                         }
                     }
@@ -185,6 +190,18 @@ public class Chat {
             for (Session other : ((SalaSocket) rooms.get(roomid)).getSessions()) {
                 try {
                     other.getBasicRemote().sendText("[\"focused\"," + userid + "," + (user.isFocused()? "1" : "0") + "]");
+                } catch (IOException ex) { }
+            }
+        }
+    }
+    
+    public static void setIdle (int userid, int roomid, String message) {
+        UsuarioSocket user = ((SalaSocket) rooms.get(roomid)).getUser(userid);
+        if (user != null) {
+            user.setIdle(message.equals("1"));
+            for (Session other : ((SalaSocket) rooms.get(roomid)).getSessions()) {
+                try {
+                    other.getBasicRemote().sendText("[\"idle\"," + userid + "," + (user.isIdle()? "1" : "0") + "]");
                 } catch (IOException ex) { }
             }
         }
