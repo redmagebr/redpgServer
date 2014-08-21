@@ -7,6 +7,8 @@
 package servlet;
 
 import dao.JogoDAO;
+import dao.SalaDAO;
+import dao.UsuarioDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ import kinds.JogoConvite;
 import kinds.Usuario;
 import sistema.GsonFactory;
 import sistema.Validation;
+import websocket.Chat;
 
 /**
  *
@@ -113,6 +116,11 @@ public class Invite extends HttpServlet {
                 int result = JogoDAO.aceitarConvite(gameid, userid);
                 if (result == 1) {
                     response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                    response.getWriter().close();
+                    /**
+                     * WARN CHAT
+                     */
+                    Chat.updateRooms (gameid, userid);
                 } else if (result == -1) {
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 } else if (result == 0) {

@@ -278,7 +278,7 @@ public class SheetDAO {
         ResultSet rs = null;
         try {
             dbh = ConnectionPooler.getConnection();
-            stmt = dbh.prepareStatement("SELECT 1 FROM view_sheetperm WHERE ID_Usuario = ? AND ID_Sheet = ? AND Permissao_Promote = 1;");
+            stmt = dbh.prepareStatement("SELECT 1 FROM view_sheets WHERE ID_Usuario = ? AND ID_Sheet = ? AND Permissao_Promote = 1;");
             stmt.setInt(1, userid);
             stmt.setInt(2, id);
             rs = stmt.executeQuery();
@@ -293,7 +293,7 @@ public class SheetDAO {
             ConnectionPooler.closeStatement(stmt);
             
             stmt = dbh.prepareStatement("SELECT ID_Usuario, Nome_Usuario, Sufix_Usuario, "
-                                      + "PermissaoV_Visualizar, PermissaoV_Editar, PermissaoV_Deletar, PermissaoV_Promote FROM view_sheetperm "
+                                      + "PermissaoV_Visualizar, PermissaoV_Editar, PermissaoV_Deletar, PermissaoV_Promote FROM view_sheets "
                                       + "WHERE ID_Sheet = ? AND isOwner = 0;");
             stmt.setInt(1, id);
             

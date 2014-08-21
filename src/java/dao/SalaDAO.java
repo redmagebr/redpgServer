@@ -181,4 +181,28 @@ public class SalaDAO {
             ConnectionPooler.closeConnection(dbh);
         }
     }
+    
+    public static ArrayList<Integer> getRoomIds (int gameid, int userid) {
+        Connection dbh = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            dbh = ConnectionPooler.getConnection();
+            stmt = dbh.prepareStatement("SELECT ID_Sala FROM view_jogosalas WHERE ID_Usuario = ? AND ID_Jogo = ?;");
+            stmt.setInt(1, userid);
+            stmt.setInt(2, gameid);
+            rs = stmt.executeQuery();
+            ArrayList<Integer> ids = new ArrayList<Integer>();
+            while (rs.next()) {
+                ids.add(rs.getInt("ID_Sala"));
+            }
+            return ids;
+        } catch (SQLException e) {
+            return null;
+        } finally {
+            ConnectionPooler.closeResultset(rs);
+            ConnectionPooler.closeStatement(stmt);
+            ConnectionPooler.closeConnection(dbh);
+        }
+    }
 }

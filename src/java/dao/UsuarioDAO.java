@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -452,6 +453,70 @@ public class UsuarioDAO {
                 user.setNicknamesufix(rs.getString("Nicksufix_Usuario"));
                 user.setStoryteller(rs.getBoolean("isStoryteller"));
                 users.add(user);
+            }
+            
+            return users;
+        } catch (SQLException ex) {
+            Logger.getLogger(UsuarioDAO.class.getName()).log(Level.SEVERE, ex.getMessage());
+            return null;
+        } finally {
+            ConnectionPooler.closeResultset(rs);
+            ConnectionPooler.closeStatement(stmt);
+            ConnectionPooler.closeConnection(dbh);
+        }
+    }
+    
+    public static UsuarioSocket getUsuarioSocket (int roomid, int userid) {
+        Connection dbh = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            dbh = ConnectionPooler.getConnection();
+            stmt = dbh.prepareStatement("SELECT Nick_Usuario, Nicksufix_Usuario, isStoryteller FROM view_salausuario WHERE ID_Sala = ? AND ID_Usuario = ?;");
+            stmt.setInt(1, roomid);
+            stmt.setInt(2, userid);
+            rs = stmt.executeQuery();
+            ArrayList<UsuarioSocket> users = new ArrayList<UsuarioSocket>();
+            UsuarioSocket user = new UsuarioSocket();
+            
+            if (rs.next()) {
+                user.setId(userid);
+                user.setNickname(rs.getString("Nick_Usuario"));
+                user.setNicknamesufix(rs.getString("Nicksufix_Usuario"));
+                user.setStoryteller(rs.getBoolean("isStoryteller"));
+            }
+            
+            return user;
+        } catch (SQLException ex) {
+            Logger.getLogger(UsuarioDAO.class.getName()).log(Level.SEVERE, ex.getMessage());
+            return null;
+        } finally {
+            ConnectionPooler.closeResultset(rs);
+            ConnectionPooler.closeStatement(stmt);
+            ConnectionPooler.closeConnection(dbh);
+        }
+    }
+    
+    public static HashMap<Integer, UsuarioSocket> getUsuarioSockets (int gameid, int userid) {
+        Connection dbh = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            dbh = ConnectionPooler.getConnection();
+            stmt = dbh.prepareStatement("SELECT ID_Sala, Nick_Usuario, Nicksufix_Usuario, isStoryteller FROM view_salausuario WHERE ID_Jogo = ? AND ID_Usuario = ?;");
+            stmt.setInt(1, gameid);
+            stmt.setInt(2, userid);
+            rs = stmt.executeQuery();
+            HashMap<Integer, UsuarioSocket> users = new HashMap<Integer, UsuarioSocket>();
+            UsuarioSocket user = new UsuarioSocket();
+            
+            if (rs.next()) {
+                user.setId(userid);
+                user.setNickname(rs.getString("Nick_Usuario"));
+                user.setNicknamesufix(rs.getString("Nicksufix_Usuario"));
+                user.setStoryteller(rs.getBoolean("isStoryteller"));
+                
+                users.put(rs.getInt("ID_Sala"), user);
             }
             
             return users;

@@ -12,13 +12,16 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import dao.MessageDAO;
 import dao.SalaDAO;
+import dao.UsuarioDAO;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.http.HttpSession;
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
@@ -39,6 +42,7 @@ import sistema.ServletAwareConfig;
 @ServerEndpoint(value="/Chat", configurator=ServletAwareConfig.class)
 public class Chat {
     private volatile static ConcurrentHashMap rooms = new ConcurrentHashMap<Integer, SalaSocket>();
+    private static Object changingRooms = new Object();
     private Integer roomid;
     private Integer userid;
     
@@ -114,41 +118,37 @@ public class Chat {
     }
     
     public static void leaveRoom (int userid, int roomid, Session peer) {
-        synchronized (rooms) {
-            SalaSocket room = (SalaSocket) rooms.get(roomid);
-            if (room == null) {
-                return;
-            }
+        SalaSocket room;
+        synchronized (changingRooms) {
+            room = (SalaSocket) rooms.get(roomid);
             synchronized (room) {
                 room.removeSession(userid, peer);
                 if (room.sessionSize() < 1) {
                     rooms.remove(roomid);
-                } else {
-                    if (!room.getUser(userid).isOnline()) {
-                        for (Session other : room.getSessions()) {
-                            try {
-                                other.getBasicRemote().sendText("[\"left\"," + userid + "]");
-                            } catch (IOException ex) { }
-                        }
-                    }
+                } else if (room.getUser(userid).isOnline()) {
                     return;
                 }
+            }
+        }
+        Set<Session> sessions = room.getSessions();
+        synchronized (sessions) {
+            for (Session session : sessions) {
+                try {
+                    session.getBasicRemote().sendText("[\"left\"," + userid + "]");
+                } catch (IOException e) {}
             }
         }
     }
     
     public static boolean enterRoom (int userid, int roomid, Session peer) {
-        SalaSocket room;
-        synchronized (rooms) {
-            if (!rooms.containsKey(roomid) || rooms.get(roomid) == null) {
-                room = SalaDAO.getSalaSocket(roomid);
-                SalaSocket placed = (SalaSocket) rooms.putIfAbsent(roomid, room);
-                if (placed != null) {
-                    room = placed;
-                }
-            } else {
-                room = (SalaSocket) rooms.get(roomid);
-            }
+        SalaSocket room = (SalaSocket) rooms.get(roomid);
+        
+        if (room == null) {
+            room = SalaDAO.getSalaSocket(roomid);
+        }
+        
+        synchronized (changingRooms) {
+            if (rooms.putIfAbsent(roomid, room) != null) room = (SalaSocket) rooms.get(roomid);
             synchronized (room) {
                 if (!room.addSession(userid, peer)) {
                     if (room.sessionSize() < 1) {
@@ -156,26 +156,33 @@ public class Chat {
                     }
                     return false;
                 }
-                if (room.getUser(userid).sessionsSize() == 1) {
-                    String userJson = GsonFactory.getFactory().getGsonExposed().toJson(room.getUser(userid));
-                    for (Session other : room.getSessions()) {
-                        if (other.equals(peer)) continue;
-                        try {
-                            other.getBasicRemote().sendText("[\"joined\"," + userJson + "]");
-                        } catch (IOException e) {}
-                    }
+                if (room.getUser(userid).sessionsSize() != 1) {
+                    return true;
                 }
-                return true;
             }
         }
+        
+        String userJson = GsonFactory.getFactory().getGsonExposed().toJson(room.getUser(userid));
+        Set<Session> sessions = room.getSessions();
+        synchronized (sessions) {
+            for (Session other : sessions) {
+                if (other.equals(peer)) continue;
+                try {
+                    other.getBasicRemote().sendText("[\"joined\"," + userJson + "]");
+                } catch (IOException e) {}
+            }
+        }
+        
+        return true;
     }
     
     
     public static void setTyping (int userid, int roomid, String message) {
         UsuarioSocket user = ((SalaSocket) rooms.get(roomid)).getUser(userid);
-        if (user != null) {
-            user.setTyping(message.equals("1"));
-            for (Session other : ((SalaSocket) rooms.get(roomid)).getSessions()) {
+        user.setTyping(message.equals("1"));
+        Set<Session> sessions = ((SalaSocket) rooms.get(roomid)).getSessions();
+        synchronized (sessions) {
+            for (Session other : sessions) {
                 try {
                     other.getBasicRemote().sendText("[\"typing\"," + userid + "," + (user.isTyping() ? "1" : "0") + "]");
                 } catch (IOException ex) { }
@@ -185,9 +192,10 @@ public class Chat {
     
     public static void setFocused (int userid, int roomid, String message) {
         UsuarioSocket user = ((SalaSocket) rooms.get(roomid)).getUser(userid);
-        if (user != null) {
-            user.setFocused(message.equals("1"));
-            for (Session other : ((SalaSocket) rooms.get(roomid)).getSessions()) {
+        user.setFocused(message.equals("1"));
+        Set<Session> sessions = ((SalaSocket) rooms.get(roomid)).getSessions();
+        synchronized (sessions) {
+            for (Session other : sessions) {
                 try {
                     other.getBasicRemote().sendText("[\"focused\"," + userid + "," + (user.isFocused()? "1" : "0") + "]");
                 } catch (IOException ex) { }
@@ -197,9 +205,10 @@ public class Chat {
     
     public static void setIdle (int userid, int roomid, String message) {
         UsuarioSocket user = ((SalaSocket) rooms.get(roomid)).getUser(userid);
-        if (user != null) {
-            user.setIdle(message.equals("1"));
-            for (Session other : ((SalaSocket) rooms.get(roomid)).getSessions()) {
+        user.setIdle(message.equals("1"));
+        Set<Session> sessions = ((SalaSocket) rooms.get(roomid)).getSessions();
+        synchronized (sessions) {
+            for (Session other : sessions) {
                 try {
                     other.getBasicRemote().sendText("[\"idle\"," + userid + "," + (user.isIdle()? "1" : "0") + "]");
                 } catch (IOException ex) { }
@@ -233,10 +242,13 @@ public class Chat {
                     + userid + ",{\"persona\":" + gson.toJson(persona)
                     + ",\"avatar\":" + gson.toJson(avatar) + "}]";
             
-            for (Session other : room.getSessions()) {
-                try {
-                    other.getBasicRemote().sendText(stringified);
-                } catch (IOException ex) { }
+            Set<Session> sessions = room.getSessions();
+            synchronized (sessions) {
+                for (Session other : sessions) {
+                    try {
+                        other.getBasicRemote().sendText(stringified);
+                    } catch (IOException ex) { }
+                }
             }
         } catch (JsonSyntaxException e) {
             
@@ -251,83 +263,93 @@ public class Chat {
                 return;
             }
             UsuarioSocket user = (UsuarioSocket) (room.getUser(userid));
-            try {
-                Date today = new Date(System.currentTimeMillis());
-                Gson gson = GsonFactory.getFactory().getGson();
+            
+            Date today = new Date(System.currentTimeMillis());
+            Gson gson = GsonFactory.getFactory().getGson();
 
-                Message message = new Message();
-                JsonObject messageJson = gson.fromJson(msgJSON, JsonObject.class);
-                if (!messageJson.has("message") || !messageJson.has("module") || !messageJson.has("special")) {
-                    peer.close();
-                }
-                
-                if (messageJson.has("localid") && !messageJson.get("localid").isJsonNull()) {
-                    message.setLocalid(messageJson.get("localid").getAsBigDecimal());
-                }
-                message.setModule(messageJson.get("module").getAsString());
-                message.setOrigin(userid);
-                if (messageJson.has("destination") && !messageJson.get("destination").isJsonNull()) {
-                    if (messageJson.get("destination").isJsonArray()) {
-                        ArrayList<Integer> destinations = new ArrayList<Integer>();
-                        JsonArray destinationArray = messageJson.get("destination").getAsJsonArray();
-                        for (int roller = 0; roller < destinationArray.size(); roller++) {
-                            destinations.add(destinationArray.get(roller).getAsInt());
-                        }
-                        message.setDestinations(destinations);
-                    } else {
-                        message.setDestination(messageJson.get("destination").getAsInt());
+            Message message = new Message();
+            JsonObject messageJson = gson.fromJson(msgJSON, JsonObject.class);
+            if (!messageJson.has("message") || !messageJson.has("module") || !messageJson.has("special")) {
+                peer.close();
+            }
+
+            if (messageJson.has("localid") && !messageJson.get("localid").isJsonNull()) {
+                message.setLocalid(messageJson.get("localid").getAsBigDecimal());
+            }
+            message.setModule(messageJson.get("module").getAsString());
+            message.setOrigin(userid);
+            if (messageJson.has("destination") && !messageJson.get("destination").isJsonNull()) {
+                if (messageJson.get("destination").isJsonArray()) {
+                    ArrayList<Integer> destinations = new ArrayList<Integer>();
+                    JsonArray destinationArray = messageJson.get("destination").getAsJsonArray();
+                    for (int roller = 0; roller < destinationArray.size(); roller++) {
+                        destinations.add(destinationArray.get(roller).getAsInt());
                     }
+                    message.setDestinations(destinations);
+                } else {
+                    message.setDestination(messageJson.get("destination").getAsInt());
                 }
-                message.setSpecialObj(messageJson.get("special").getAsJsonObject());
-                
-                if (!message.setMsg(messageJson.get("message").getAsString(), user.isStoryteller())) {
-                    peer.close();
+            }
+            message.setSpecialObj(messageJson.get("special").getAsJsonObject());
+
+            if (!message.setMsg(messageJson.get("message").getAsString(), user.isStoryteller())) {
+                peer.close();
+                return;
+            }
+
+            message.setClone(messageJson.get("clone").getAsBoolean());
+
+            message.setSpecial(gson.toJson(message.getSpecialObj()));
+            message.unsetSpecialObj();
+            message.setSendDate(today);
+
+            if (!message.needsStored()) {
+                message.setId(BigDecimal.valueOf(room.getFakeId()));
+            } else {
+                if (!MessageDAO.addMessage(message, userid, roomid)) {
+                    peer.getBasicRemote().sendText("[\"notsaved\"," + msgJSON + "]");
                     return;
                 }
-                
-                message.setClone(messageJson.get("clone").getAsBoolean());
-                
-                message.setSpecial(gson.toJson(message.getSpecialObj()));
-                message.unsetSpecialObj();
-                message.setSendDate(today);
-                
-                if (!message.needsStored()) {
-                    message.setId(BigDecimal.valueOf(room.getFakeId()));
-                } else {
-                    if (!MessageDAO.addMessage(message, userid, roomid)) {
-                        peer.getBasicRemote().sendText("[\"notsaved\"," + msgJSON + "]");
-                        return;
-                    }
-                }
-                
-                if (!message.isClone()) {
-                    String stringified = "[\"message\"," + gson.toJson(message) + "]";
-                    try {
-                        peer.getBasicRemote().sendText(stringified);
-                    } catch (IOException e) {}
-                }
-                message.setLocalid(null);
-                
-                String stringifiedOthers = "[\"message\"," + gson.toJson(message) + "]";
-                
-                if (message.getDestinations() == null && message.getDestination() == null) {
-                    for (Session other : ((SalaSocket) rooms.get(roomid)).getSessions()) {
+            }
+
+            if (!message.isClone()) {
+                String stringified = "[\"message\"," + gson.toJson(message) + "]";
+                try {
+                    peer.getBasicRemote().sendText(stringified);
+                } catch (IOException e) {}
+            }
+            message.setLocalid(null);
+
+            String stringifiedOthers = "[\"message\"," + gson.toJson(message) + "]";
+
+            Set<Session> sessions;
+            
+            if (message.getDestinations() == null && message.getDestination() == null) {
+                sessions = ((SalaSocket) rooms.get(roomid)).getSessions();
+                synchronized (sessions) {
+                    for (Session other : sessions) {
                         if (other.equals(peer)) { continue; }
                         other.getBasicRemote().sendText(stringifiedOthers);
                     }
-                } else {
-                    if (message.getDestinations() == null) {
-                        UsuarioSocket target = (UsuarioSocket) room.getUser(message.getDestination());
+                }
+            } else {
+                if (message.getDestinations() == null) {
+                    UsuarioSocket target = (UsuarioSocket) room.getUser(message.getDestination());
+                    sessions = target.getSessions();
+                    synchronized (sessions) {
                         for (Session other : target.getSessions()) {
                             if (other.equals(peer)) { continue; }
                             other.getBasicRemote().sendText(stringifiedOthers);
                         }
-                    } else {
-                        UsuarioSocket target;
-                        for (int id : message.getDestinations()) {
-                            if (room.getUsers().containsKey(id)) {
-                                target = (UsuarioSocket) room.getUser(id);
-                                for (Session other : target.getSessions()) {
+                    }
+                } else {
+                    UsuarioSocket target;
+                    for (int id : message.getDestinations()) {
+                        if (room.getUsers().containsKey(id)) {
+                            target = (UsuarioSocket) room.getUser(id);
+                            sessions = target.getSessions();
+                            synchronized (sessions) {
+                                for (Session other : sessions) {
                                     if (other.equals(peer)) { continue; }
                                     other.getBasicRemote().sendText(stringifiedOthers);
                                 }
@@ -335,10 +357,8 @@ public class Chat {
                         }
                     }
                 }
-            } catch (JsonSyntaxException e) {
-                return;
             }
-        } catch (IOException e) { return; }
+        } catch (IOException | JsonSyntaxException e) { }
     }
 
     private static void setMemory(Integer userid, Integer roomid, Session peer, String message) {
@@ -358,11 +378,25 @@ public class Chat {
                 memory = "{}";
             }
             room.setJsonMemory(memory);
-            for (Session other : room.getSessions()) {
-                other.getBasicRemote().sendText("[\"memory\"," + roomid + "," + memory + "]");
-            }
             SalaDAO.storeMemory(room, roomid);
+            Set<Session> sessions = room.getSessions();
+            synchronized (sessions) {
+                for (Session other : sessions) {
+                    other.getBasicRemote().sendText("[\"memory\"," + roomid + "," + memory + "]");
+                }
+            }
         } catch (IOException e) { }
+    }
+    
+    public static void updateRooms (int gameid, int userid) {
+        SalaSocket room;
+        HashMap<Integer, UsuarioSocket> usuariosala = UsuarioDAO.getUsuarioSockets(gameid, userid);
+        for (Entry entry : usuariosala.entrySet()) {
+            room = (SalaSocket) rooms.get(entry.getKey());
+            if (room != null) {
+                room.addUser((UsuarioSocket) entry.getValue());
+            }
+        }
     }
     
 }
