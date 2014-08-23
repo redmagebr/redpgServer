@@ -86,12 +86,8 @@ public class Chat {
                 return null;
             }
             return "[\"getroom\"," + GsonFactory.getFactory().getGsonExposed().toJson(((SalaSocket) rooms.get(this.roomid)).getUsers()) + "," + ((SalaSocket) rooms.get(this.roomid)).getJsonMemory() + "]";
-        } else if (action.equals("typing")) {
-            setTyping(this.userid, this.roomid, message);
-        } else if (action.equals("focused")) {
-            setFocused(this.userid, this.roomid, message);
-        } else if (action.equals("idle")) {
-            setIdle(this.userid, this.roomid, message);
+        } else if (action.equals("status")) {
+            setStatus(this.userid, this.roomid, message);
         } else if (action.equals("message")) {
             sendMessage(userid, roomid, peer, message);
         } else if (action.equals("persona")) {
@@ -175,41 +171,23 @@ public class Chat {
         return true;
     }
     
-    
-    public static void setTyping (int userid, int roomid, String message) {
-        UsuarioSocket user = ((SalaSocket) rooms.get(roomid)).getUser(userid);
-        user.setTyping(message.equals("1"));
-        Set<Session> sessions = ((SalaSocket) rooms.get(roomid)).getSessions();
-        synchronized (sessions) {
-            for (Session other : sessions) {
-                try {
-                    other.getBasicRemote().sendText("[\"typing\"," + userid + "," + (user.isTyping() ? "1" : "0") + "]");
-                } catch (IOException ex) { }
-            }
+    public static void setStatus (int userid, int roomid, String message) {
+        String[] status = message.split(",");
+        if (status.length != 3) {
+            return;
         }
-    }
-    
-    public static void setFocused (int userid, int roomid, String message) {
         UsuarioSocket user = ((SalaSocket) rooms.get(roomid)).getUser(userid);
-        user.setFocused(message.equals("1"));
+        user.setTyping(status[0].equals("1"));
+        user.setIdle(status[1].equals("1"));
+        user.setFocused(status[2].equals("1"));
         Set<Session> sessions = ((SalaSocket) rooms.get(roomid)).getSessions();
         synchronized (sessions) {
             for (Session other : sessions) {
                 try {
-                    other.getBasicRemote().sendText("[\"focused\"," + userid + "," + (user.isFocused()? "1" : "0") + "]");
-                } catch (IOException ex) { }
-            }
-        }
-    }
-    
-    public static void setIdle (int userid, int roomid, String message) {
-        UsuarioSocket user = ((SalaSocket) rooms.get(roomid)).getUser(userid);
-        user.setIdle(message.equals("1"));
-        Set<Session> sessions = ((SalaSocket) rooms.get(roomid)).getSessions();
-        synchronized (sessions) {
-            for (Session other : sessions) {
-                try {
-                    other.getBasicRemote().sendText("[\"idle\"," + userid + "," + (user.isIdle()? "1" : "0") + "]");
+                    other.getBasicRemote().sendText("[\"status\"," + userid + "," + 
+                                                    (user.isTyping() ? "1" : "0") + "," + 
+                                                    (user.isIdle() ? "1" : "0") + "," + 
+                                                    (user.isFocused() ? "1" : "0") + "]");
                 } catch (IOException ex) { }
             }
         }

@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import kinds.Jogo;
 import kinds.JogoConvite;
+import kinds.JogoPermissao;
 import kinds.JogoUsuarioSala;
 import kinds.Usuario;
 import sistema.GsonFactory;
@@ -114,6 +115,25 @@ public class Game extends HttpServlet {
                 } else {
                     response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 }
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            }
+            return;
+        }
+        
+        /**
+         * LIST PRIVILEGES
+         */
+        if (action.equals("privileges")) {
+            try {
+                int gameid = Integer.parseInt(request.getParameter("id"));
+                ArrayList<JogoPermissao> jogos = JogoDAO.getPrivileges(gameid, userid);
+                if (jogos == null) {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    return;
+                }
+                response.setContentType("application/json;charset=UTF-8");
+                GsonFactory.getFactory().getGson().toJson(jogos, response.getWriter());
             } catch (NumberFormatException e) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }

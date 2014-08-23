@@ -18,6 +18,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import kinds.Jogo;
 import kinds.JogoConvite;
+import kinds.JogoPermissao;
+import kinds.JogoUsuario;
 import kinds.JogoUsuarioSala;
 import kinds.JogoUsuarioSheet;
 import kinds.SalaUsuario;
@@ -85,6 +87,44 @@ public class JogoDAO {
                 jogoMap.get(rs.getInt("ID_Jogo")).getRooms().add(sala);
             }
             return jogos;
+        } catch (SQLException e) {
+            return null;
+        } finally {
+            ConnectionPooler.closeResultset(rs);
+            ConnectionPooler.closeStatement(stmt);
+            ConnectionPooler.closeConnection(dbh);
+        }
+    }
+    
+    public static JogoUsuario getJogo (int userid, int gameid) {
+        Connection dbh = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            dbh = ConnectionPooler.getConnection();
+            stmt = dbh.prepareStatement("SELECT * FROM view_jogos WHERE ID_Usuario = ? AND ID_Jogo = ?;");
+            stmt.setInt(1, userid);
+            stmt.setInt(2, gameid);
+            rs = stmt.executeQuery();
+            JogoUsuario jogo = new JogoUsuario();
+            if (rs.next()) {
+                jogo.setCreatorid(rs.getInt("Criador_Jogo"));
+                jogo.setId(rs.getInt("ID_Jogo"));
+                jogo.setCreatornick(rs.getString("Nick_Criador"));
+                jogo.setCreatorsufix(rs.getString("Nicksufix_Criador"));
+                jogo.setFreejoin(rs.getBoolean("Jogo_Publico"));
+                jogo.setName(rs.getString("Nome_Jogo"));
+                jogo.setDescription(rs.getString("Descricao_Jogo"));
+                
+                jogo.setCreateSheet(rs.getBoolean("Permissao_CriarFichas"));
+                jogo.setViewSheet(rs.getBoolean("Permissao_VisualizarFichas"));
+                jogo.setEditSheet(rs.getBoolean("Permissao_EditarFichas"));
+                jogo.setDeleteSheet(rs.getBoolean("Permissao_DeletarFichas"));
+                jogo.setCreateRoom(rs.getBoolean("Permissao_CriarSala"));
+                jogo.setInvite(rs.getBoolean("Permissao_Invite"));
+                jogo.setPromote(rs.getBoolean("Permissao_Promote"));
+            }
+            return jogo;
         } catch (SQLException e) {
             return null;
         } finally {
@@ -417,6 +457,56 @@ public class JogoDAO {
                     Logger.getLogger(JogoDAO.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+            ConnectionPooler.closeResultset(rs);
+            ConnectionPooler.closeStatement(stmt);
+            ConnectionPooler.closeConnection(dbh);
+        }
+    }
+    
+    
+    public static ArrayList<JogoPermissao> getPrivileges (int gameid, int userid) {
+        Connection dbh = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            JogoUsuario perms = getJogo(userid, gameid);
+            ArrayList<JogoPermissao> jogos = new ArrayList<JogoPermissao>();
+            if (!perms.isPromote()) {
+                return jogos;
+            }
+            dbh = ConnectionPooler.getConnection();
+            
+            stmt = dbh.prepareStatement("SELECT ID_Usuario, Nick_Usuario, Nicksufix_Usuario, "
+                                      + "Permissao_CriarFichas, Permissao_VisualizarFichas, Permissao_EditarFichas, "
+                                      + "Permissao_DeletarFichas, Permissao_CriarSala, Permissao_Invite, Permissao_Promote "
+                                      + "FROM view_jogos "
+                                      + "WHERE ID_Jogo = ? AND Criador_Jogo != ID_Usuario;");
+            stmt.setInt(1, gameid);
+            
+            rs = stmt.executeQuery();
+            
+            JogoPermissao jogo;
+            while (rs.next()) {
+                jogo = new JogoPermissao();
+                jogo.setId(gameid);
+                jogo.setUserid(rs.getInt("ID_Usuario"));
+                jogo.setNicknamesufix(rs.getString("Nicksufix_Usuario"));
+                jogo.setNickname(rs.getString("Nick_Usuario"));
+                jogo.setDeleteSheet(rs.getBoolean("Permissao_DeletarFichas"));
+                jogo.setEditSheet(rs.getBoolean("Permissao_EditarFichas"));
+                jogo.setViewSheet(rs.getBoolean("Permissao_VisualizarFichas"));
+                jogo.setPromote(rs.getBoolean("Permissao_Promote"));
+                jogo.setCreateRoom(rs.getBoolean("Permissao_CriarSala"));
+                jogo.setCreateSheet(rs.getBoolean("Permissao_CriarFichas"));
+                jogo.setInvite(rs.getBoolean("Permissao_Invite"));
+                
+                jogos.add(jogo);
+            }
+            
+            return jogos;
+        } catch (SQLException e) {
+            return null;
+        } finally {
             ConnectionPooler.closeResultset(rs);
             ConnectionPooler.closeStatement(stmt);
             ConnectionPooler.closeConnection(dbh);
