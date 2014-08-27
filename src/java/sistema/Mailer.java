@@ -29,8 +29,12 @@ public class Mailer {
                 "Olá, " + user.getName() + ".\n\n"
               + "Obrigado por se registrar no sistema!\n\n"
               + "Para começar a utilizar o sistema, é necessário ativar a sua conta.\n"
-              + "Você pode fazer isso seguindo o link a seguir:\n\n"
+              + "Você pode fazer isso seguindo o link a seguir:\n"
               + "http://redpg.com.br/index.html?confirm#" + uuid
+              + "\n\nCaso esse link não funcione para você, acesse: \n"
+                        + "http://redpg.com.br/service/ActivateAccount.jsp?lingo=pt_br \n"
+                        + "E digite o código: \n" +
+                        uuid + "\n\nPara ativar sua conta. Você não poderá utilizar sua conta até a ativar por um dos links acima."
               + "\n\n\nObrigado por ter registrado sua conta!");
         
         
@@ -53,6 +57,11 @@ public class Mailer {
 "                    <p>Para começar a utilizar o sistema, é necessário ativar a sua conta.\n" +
 "                    <p>Você pode fazer isso seguindo o link a seguir:</p>\n" +
 "                    <p><a href='http://redpg.com.br/index.html?confirm#" + uuid + "' target='_blank'>http://redpg.com.br/app/index.html?confirm#" + uuid + "</a></p>\n" +
+                     "<p>Caso o link acima não funcione, acesse:</p>" +
+                     "<p><a href='http://redpg.com.br/service/ActivateAccount.jsp?lingo=pt_br' target='_blank'>http://redpg.com.br/service/ActivateAccount.jsp?lingo=pt_br</a>" +
+                     "<p>E digite o código:</p>" +
+                     "<p>" + uuid + "</p>" +
+                     "<p>Para ativar sua conta. Você não poderá utilizar sua conta antes de seguir esses passos.</p>" +
 "                    <p style='margin-top: 20px;'>Obrigado por ter registrado sua conta!</p>\n" +
 "                </div>\n" +
 "            </div>\n" +

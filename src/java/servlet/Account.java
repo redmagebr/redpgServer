@@ -139,9 +139,18 @@ public class Account extends HttpServlet {
             return;
         }
         
+        /**
+         * ACTIVATE ACCOUNT
+         */
         if (action.equals("confirm")) {
             String uuid = request.getParameter("uuid");
             int result = UsuarioDAO.confirmAccount(uuid);
+            if (request.getParameter("redirect") != null && request.getParameter("redirect").equals("1")) {
+                response.sendRedirect("ActivateAccountResult.jsp?result=" + result +
+                        (request.getParameter("lingo") != null ? ("&lingo=" + request.getParameter("lingo")) : "")
+                );
+                return;
+            }
             if (result < 0) {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             } else if (result < 1) {
@@ -179,7 +188,7 @@ public class Account extends HttpServlet {
             int result = UsuarioDAO.createAccount(usuario);
             if (result == 1) {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-                //resendUuid(usuario.getEmail());
+                resendUuid(usuario.getEmail());
             } else if (result == -3) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
             } else if (result == -2) {
