@@ -59,11 +59,13 @@ public class Style extends HttpServlet {
                 SheetStyle style = SheetStyleDAO.getStyle(requestId, userid);
                 if (style != null) {
                     if (style.getName() != null) {
-                        Gson gson = GsonFactory.getFactory().getGson();
-                        style.setName(gson.toJson(style.getName()));
-                        request.setAttribute("SheetStyle", style);
-                        request.getRequestDispatcher("sheetStyle.jsp")
-                            .forward(request,response);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().print("{\"id\":" + style.getId() + ","
+                                + "\"html\":" + style.getHtml() + ","
+                                + "\"css\":" + style.getCss() + ","
+                                + "\"beforeProcess\":" + style.getBeforeProcess() + ","
+                                + "\"afterProcess\":" + style.getAfterProcess()
+                                + "}");
                     } else {
                         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     }
@@ -72,8 +74,8 @@ public class Style extends HttpServlet {
                 }
             } catch (NumberFormatException e) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                return;
             }
+            return;
         }
         
         /**
