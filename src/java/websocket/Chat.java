@@ -359,6 +359,7 @@ public class Chat {
             Set<Session> sessions = room.getSessions();
             synchronized (sessions) {
                 for (Session other : sessions) {
+                    if (other.equals(peer)) continue;
                     other.getBasicRemote().sendText("[\"memory\"," + roomid + "," + memory + "]");
                 }
             }

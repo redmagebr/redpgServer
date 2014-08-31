@@ -60,11 +60,13 @@ public class Style extends HttpServlet {
                 if (style != null) {
                     if (style.getName() != null) {
                         response.setContentType("application/json;charset=UTF-8");
-                        response.getWriter().print("{\"id\":" + style.getId() + ","
+                        response.getWriter().print("{"
+                                + "\"id\":" + style.getId() + ","
                                 + "\"html\":" + style.getHtml() + ","
                                 + "\"css\":" + style.getCss() + ","
                                 + "\"beforeProcess\":" + style.getBeforeProcess() + ","
-                                + "\"afterProcess\":" + style.getAfterProcess()
+                                + "\"afterProcess\":" + style.getAfterProcess() + ","
+                                + "\"name\":" + GsonFactory.getFactory().getGson().toJson(style.getName())
                                 + "}");
                     } else {
                         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
