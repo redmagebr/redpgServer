@@ -6,21 +6,28 @@
 
 package servlet;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import sistema.GsonFactory;
 
 /**
  *
  * @author reddo
  */
-@WebServlet(name = "ShellTest", urlPatterns = {"/ShellTest"})
+@WebServlet(name = "GitUpdate", urlPatterns = {"/GitUpdate"})
 public class GitUpdate extends HttpServlet {
 
     /**
@@ -34,25 +41,22 @@ public class GitUpdate extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String pass = request.getParameter("secret");
-        if (pass == null || !pass.equals("banana")) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-        String which = request.getParameter("git");
-        if (which == null || (!which.equals("redpg") && !which.equals("rules"))) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
+        String which = request.getParameter("secret");
+        if (which == null) which = "";
         try {
             switch (which) {
-                case "redpg": {
+                case "secretRedpg": {
                     Process ps = Runtime.getRuntime().exec("sh /home/redpgFrontGitPull.sh");
                     break;
                 }
-                case "rules": {
+                case "secretRules": {
                     Process ps = Runtime.getRuntime().exec("sh /home/rulesFrontGitPull.sh");
                     break;
+                }
+                default : {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().println(which);
+                    return;
                 }
             }
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
