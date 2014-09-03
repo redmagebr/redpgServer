@@ -45,11 +45,11 @@ public class GitUpdate extends HttpServlet {
         if (which == null) which = "";
         try {
             switch (which) {
-                case "secretRedpg": {
+                case "123": {
                     Process ps = Runtime.getRuntime().exec("sh /home/redpgFrontGitPull.sh");
                     break;
                 }
-                case "secretRules": {
+                case "321": {
                     Process ps = Runtime.getRuntime().exec("sh /home/rulesFrontGitPull.sh");
                     break;
                 }
