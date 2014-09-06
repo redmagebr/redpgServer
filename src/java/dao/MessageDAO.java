@@ -112,10 +112,12 @@ public class MessageDAO {
         try {
             dbh = ConnectionPooler.getConnection();
             stmt = dbh.prepareStatement("SELECT * FROM view_chatmensagens WHERE ID_Sala = ? AND "
-                    + "(ID_Destination = ? OR "
-                    + "(ID_Destination IS NULL AND "
-                    + "(ID_Origin != ? OR NOT isClone)"
-                    + ")"
+                    + "("
+                        + "ID_Destination = ? OR "
+                        + "ID_Destination IS NULL OR "
+                        + "("
+                            + "ID_Origin = ? AND NOT isClone"
+                        + ")"
                     + ");");
             stmt.setInt(1, roomid);
             stmt.setInt(2, userid);

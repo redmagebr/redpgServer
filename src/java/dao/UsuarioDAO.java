@@ -497,6 +497,32 @@ public class UsuarioDAO {
         }
     }
     
+    public static String getPersonalMemory (int roomid, int userid) {
+        Connection dbh = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            dbh = ConnectionPooler.getConnection();
+            stmt = dbh.prepareStatement("SELECT Personal_Memory FROM view_salausuario WHERE ID_Sala = ? AND ID_Usuario = ?;");
+            stmt.setInt(1, roomid);
+            stmt.setInt(2, userid);
+            rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getString("Personal_Memory");
+            }
+            
+            return null;
+        } catch (SQLException ex) {
+            Logger.getLogger(UsuarioDAO.class.getName()).log(Level.SEVERE, ex.getMessage());
+            return null;
+        } finally {
+            ConnectionPooler.closeResultset(rs);
+            ConnectionPooler.closeStatement(stmt);
+            ConnectionPooler.closeConnection(dbh);
+        }
+    }
+    
     public static HashMap<Integer, UsuarioSocket> getUsuarioSockets (int gameid, int userid) {
         Connection dbh = null;
         PreparedStatement stmt = null;
